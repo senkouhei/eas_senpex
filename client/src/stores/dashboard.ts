@@ -18,13 +18,15 @@ export const useDashboardStore = defineStore('dashboard', {
       extractedContacts: 0,
       transferredSMS: 0,
     },
-    botStatusMap: reactive({
+    botStatusMap: reactive<{ [key: string]: boolean }>({
       'whole': false,
       'gmail_fetch_bot.js': false,
       'resume_download_link_bot.js': false,
       'contact_info_extraction_bot.js': false,
       'twilio_sms_bot.js': false,
-    })
+    }),
+    loading: false,
+    error: null as string | null
   }),
 
   actions: {

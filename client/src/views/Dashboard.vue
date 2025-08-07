@@ -161,10 +161,10 @@ onMounted(() => {
     for (const [key, value] of Object.entries(msg)) {
       if (key === 'whole') {
         const {running, count} = value as {running: boolean, count: number}
-        botStatusMap[key] = running
+        botStatusMap[key as string] = running
       } else {
         const {running, count} = value as {running: boolean, count: number}
-        botStatusMap[key] = running
+        botStatusMap[key as string] = running
         switch(key) {
           case 'gmail_fetch_bot.js':
             dashboardStore.stats.totalCandidators = count
