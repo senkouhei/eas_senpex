@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { reactive } from 'vue'
 
 interface DashboardStats {
   totalCandidators: number
@@ -16,10 +17,14 @@ export const useDashboardStore = defineStore('dashboard', {
       fetchedResumes: 0,
       extractedContacts: 0,
       transferredSMS: 0,
-      lastUpdated: ''
-    } as DashboardStats,
-    loading: false,
-    error: null as string | null
+    },
+    botStatusMap: reactive({
+      'whole': false,
+      'gmail_fetch_bot.js': false,
+      'resume_download_link_bot.js': false,
+      'contact_info_extraction_bot.js': false,
+      'twilio_sms_bot.js': false,
+    })
   }),
 
   actions: {
@@ -36,6 +41,12 @@ export const useDashboardStore = defineStore('dashboard', {
       } finally {
         this.loading = false
       }
+    },
+    setBotStatusMap(statusMap: Record<string, boolean>) {
+      Object.assign(this.botStatusMap, statusMap)
+    },
+    setStats(stats: Partial<typeof this.stats>) {
+      Object.assign(this.stats, stats)
     }
   }
 })

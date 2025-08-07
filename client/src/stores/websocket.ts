@@ -1,9 +1,11 @@
 let ws: WebSocket | null = null;
 let isConnected = false;
 
+const WS_URL = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:5001/ws';
+
 export function useDashboardWebSocket(callback: (msg: any) => void, onClose: () => void) {
   if (isConnected) return;
-  ws = new WebSocket('ws://localhost:5000/ws');
+  ws = new WebSocket(WS_URL);
   isConnected = true;
 
   ws.onmessage = (event) => {

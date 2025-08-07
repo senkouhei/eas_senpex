@@ -34,19 +34,23 @@ export async function initWebSocketServer(server) {
 async function initData() {
   console.log("init data");
   return new Promise(async (resolve, reject) => {
-    const totalCandidators = await getCountOfAllCandidators();
-    const fetchedResumes = await getCandidatorsCountWithUrl();
-    const extractedContacts = await getCandidatorsCountWithContactInfo();
-    const transferredSMS = await getCandidatorsCountWithTwilioSMS();
-    botStatuses = {
-      'whole': {running: true},
-      'gmail_fetch_bot.js': {running: false, count: totalCandidators},
-      'resume_download_link_bot.js': {running: false, count: fetchedResumes},
-      'contact_info_extraction_bot.js': {running: false, count: extractedContacts},
-      'twilio_sms_bot.js': {running: false, count: transferredSMS},
-    }
+    try {
+      const totalCandidators = await getCountOfAllCandidators();
+      const fetchedResumes = await getCandidatorsCountWithUrl();
+      const extractedContacts = await getCandidatorsCountWithContactInfo();
+      const transferredSMS = await getCandidatorsCountWithTwilioSMS();
+      botStatuses = {
+        'whole': {running: true},
+        'gmail_fetch_bot.js': {running: false, count: totalCandidators},
+        'resume_download_link_bot.js': {running: false, count: fetchedResumes},
+        'contact_info_extraction_bot.js': {running: false, count: extractedContacts},
+        'twilio_sms_bot.js': {running: false, count: transferredSMS},
+      }
 
-    resolve();
+      resolve();
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 

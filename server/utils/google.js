@@ -35,29 +35,34 @@ class GoogleService {
   }
 
   async ensureToken(tokenPath, oAuth2Client) {
-    if (fs.existsSync(tokenPath)) {
-      return JSON.parse(fs.readFileSync(tokenPath));
-    }
-    // Token does not exist, start OAuth flow
-    const authUrl = oAuth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: SCOPES,
-    });
-    console.log('Authorize this app by visiting this url:', authUrl);
-    await open(authUrl);
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    const code = await new Promise(resolve => rl.question('Enter the code from that page here: ', answer => {
-      rl.close();
-      resolve(answer);
-    }));
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
-    fs.writeFileSync(tokenPath, JSON.stringify(tokens));
-    console.log('Token stored to', tokenPath);
-    return tokens;
+    try {
+      if (fs.existsSync(tokenPath)) {
+        return JSON.parse(fs.readFileSync(tokenPath));
+      }
+      // Token does not exist, start OAuth flow
+      const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+      });
+      console.log('Authorize this app by visiting this url:', authUrl);
+      await open(authUrl);
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      const code = await new Promise(resolve => rl.question('Enter the code from that page here: ', answer => {
+        rl.close();
+        resolve(answer);
+      }));
+      const { tokens } = await oAuth2Client.getToken(code);
+      oAuth2Client.setCredentials(tokens);
+      fs.writeFileSync(tokenPath, JSON.stringify(tokens));
+      console.log('Token stored to', tokenPath);
+      return tokens;
+    } catch (err) {
+      console.error(err.message || err);
+      throw err;
+    } 
   }
 
   async init() {

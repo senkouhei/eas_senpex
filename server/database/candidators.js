@@ -28,7 +28,7 @@ export async function getCandidatorsWithoutContactInfo() {
 
 // getCandidatorsWithoutDownloadLink
 export async function getCandidatorsWithoutUrl() {
-  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).limit(100000);
   if (error) throw error;
   return data;
 }
@@ -36,7 +36,7 @@ export async function getCandidatorsWithoutUrl() {
 
 // updateCandidatorDownloadLink
 export async function updateCandidatorDownloadLink(gmail_id, download_link) {
-  const { data, error } = await supabase.from('candidators').update({ download_link }).eq('gmail_id', gmail_id);
+  const { data, error } = await supabase.from('candidators').update({ resume_url: download_link }).eq('gmail_id', gmail_id);
   if (error) throw error;
   return data;
 }
@@ -96,4 +96,37 @@ export async function getCandidatorsCountWithTwilioSMS() {
     .eq('sms_transferred', true);
   if (error) throw error;
   return count;
+}
+
+
+// for get candidators by status
+export async function getCandidatorsByStatus(status, page, limit, search) {
+  let query = supabase.from('candidators').select('*', { count: 'exact' });
+  switch (status) {
+    case 'fetched':
+      query = query.or('resume_url.not.is.null,phone_number.not.is.null')
+      break;
+    case 'extracted':
+      query = query.neq('phone_number', null);
+      break;
+    case 'transferred':
+      query = query.eq('sms_transferred', true);
+      break;
+    default:
+      // no filter
+      break;
+  }
+  
+  if (search) {
+    query = query.ilike('name', `%${search}%`);
+  }
+  
+  query = query.order('gmail_timestamp', { ascending: false });
+  query = query.range((page - 1) * limit, page * limit - 1);
+  const { data, error, count } = await query;
+  if (error) {
+    console.log('error', error);
+    throw error;
+  }
+  return { data, count };
 }

@@ -3,13 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 import { initWebSocketServer } from './utils/websocket.js';
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { startAllBots } from './bot/bot_manager.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -50,4 +45,6 @@ server.listen(PORT, '0.0.0.0', () => {
   initWebSocketServer(server).then(() => {
     startAllBots();
   });
+
 });
+

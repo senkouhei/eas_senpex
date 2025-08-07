@@ -1,5 +1,6 @@
 import express from 'express';
 import supabase from '../database/supabase.js';
+import { getCandidatorsByStatus } from '../database/candidators.js';
 
 const router = express.Router();
 
@@ -9,19 +10,9 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const search = req.query.search || '';
+    
+    const { data, count } = await getCandidatorsByStatus('', page, limit, search);
 
-    let query = supabase
-      .from('candidators')
-      .select('id, name, email, phone_number, city, state, url, resume_fetched, contact_extracted, sms_transferred, sms_status, created_at, updated_at', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
-
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
-    }
-
-    const { data, error, count } = await query;
-    if (error) throw error;
     res.json({ data, count });
   } catch (err) {
     console.error(err.message || err);
@@ -32,25 +23,13 @@ router.get('/', async (req, res) => {
 // Get candidators by status
 router.get('/status/:status', async (req, res) => {
   const { status } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const search = req.query.search || '';
   try {
-    let query = supabase.from('candidators').select('*').order('created_at', { ascending: false });
-    switch (status) {
-      case 'fetched':
-        query = query.eq('resume_fetched', true);
-        break;
-      case 'extracted':
-        query = query.eq('contact_extracted', true);
-        break;
-      case 'transferred':
-        query = query.eq('sms_transferred', true);
-        break;
-      default:
-        // no filter
-        break;
-    }
-    const { data, error } = await query;
-    if (error) throw error;
-    res.json(data);
+    const { data, count } = await getCandidatorsByStatus(status, page, limit, search);
+    
+    res.json({ data, count });
   } catch (err) {
     console.error(err.message || err);
     res.status(500).json({ error: 'Server error' });

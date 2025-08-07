@@ -6,6 +6,10 @@ import Settings from '../views/Settings.vue'
 const routes = [
   {
     path: '/',
+    component: Dashboard
+  },
+  {
+    path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard
   },
