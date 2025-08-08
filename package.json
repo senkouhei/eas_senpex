@@ -26,7 +26,8 @@
     "jsonwebtoken": "^9.0.2",
     "open": "^10.2.0",
     "pg": "^8.11.3",
-    "promise-request-retry": "^1.0.2"
+    "promise-request-retry": "^1.0.2",
+    "serve": "^14.2.4"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

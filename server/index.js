@@ -42,13 +42,13 @@ import authRoutes from './routes/auth.js';
     console.log(`Server running on port ${PORT}`);
     console.log(`Server accessible at http://localhost:${PORT}`);
     // Initialize WebSocket server
-    // try {
-    //   await initWebSocketServer(server);
-    //   startAllBots();
-    // } catch (err) {
-    //   console.error('Failed to initialize WebSocket server:', err);
-    //   process.exit(1); // Optionally exit if this is critical
-    // }
+    try {
+      await initWebSocketServer(server);
+      startAllBots();
+    } catch (err) {
+      console.error('Failed to initialize WebSocket server:', err);
+      process.exit(1); // Optionally exit if this is critical
+    }
   });
 })();
 
