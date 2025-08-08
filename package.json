@@ -5,7 +5,7 @@
   "main": "server/index.js",
   "type": "module",
   "scripts": {
-    "deploy": "concurrently --kill-others \"serve -s client\\dist\" \"node server/index.js\"",
+    "deploy": "node server/index.js",
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
     "server": "nodemon server/index.js",
     "client": "cd client && npm run dev",
