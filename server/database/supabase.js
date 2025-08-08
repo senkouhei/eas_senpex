@@ -11,6 +11,7 @@ class SupabaseClient {
         process.env.SUPABASE_SERVICE_KEY
       );
       SupabaseClient.instance = this;
+      console.log('SupabaseClient initialized');
     }
     return SupabaseClient.instance;
   }

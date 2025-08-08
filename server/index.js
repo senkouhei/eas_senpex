@@ -21,13 +21,14 @@ import authRoutes from './routes/auth.js';
   const app = express();
   const server = http.createServer(app);
   const PORT = process.env.PORT || 5000;
+  const HOST = process.env.HOST || '0.0.0.0';
 
   // Middleware
   app.use(cors());
   app.use(express.json());
 
   // Google Service
-  const googleService = getGoogleServiceInstance();
+  getGoogleServiceInstance();
 
   app.use('/api/candidators', candidatorRoutes);
   app.use('/api/settings', settingsRoutes);
@@ -39,13 +40,17 @@ import authRoutes from './routes/auth.js';
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
 
-  server.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, HOST, async () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Server accessible at http://localhost:${PORT}`);
     // Initialize WebSocket server
-    initWebSocketServer(server).then(() => {
+    try {
+      await initWebSocketServer(server);
       startAllBots();
-    });
+    } catch (err) {
+      console.error('Failed to initialize WebSocket server:', err);
+      process.exit(1); // Optionally exit if this is critical
+    }
   });
 })();
 

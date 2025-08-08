@@ -100,7 +100,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="candidator in (Array.isArray(candidatorsStore.candidators) ? candidatorsStore.candidators : [])" :key="candidator.id">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky-col sticky-col-left bg-white z-10">
-                  {{ candidator.name }}
+                  {{ candidator.name_display }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {{ candidator.email }}
@@ -185,7 +185,7 @@ const search = ref('')
 const showMenu = ref(false)
 
 const fetchPaginated = async () => {
-  await candidatorsStore.fetchPaginated({ page: page.value, limit: limit.value, search: search.value })
+  await candidatorsStore.fetchPaginated({ status: activeTab.value, page: page.value, limit: limit.value, search: search.value })
 }
 
 const onSearch = () => {
@@ -221,11 +221,8 @@ const tabs = computed(() => [
 
 const setActiveTab = (tab: string) => {
   activeTab.value = tab
-  if (tab === 'all') {
-    candidatorsStore.fetchCandidators()
-  } else {
-    candidatorsStore.fetchByStatus(tab)
-  }
+  page.value = 1;
+  fetchPaginated()
 }
 
 const getSMSStatusClass = (status: string) => {

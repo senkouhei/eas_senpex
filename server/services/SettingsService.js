@@ -2,8 +2,12 @@ import { getAllSettings } from '../database/settings.js';
 
 class SettingsService {
   constructor() {
-    this.settings = {};
-    // Do not call this.load() here; require explicit load
+    if (!SettingsService.instance) {
+      this.settings = {};
+      // Do not call this.load() here; require explicit load
+      SettingsService.instance = this;
+    }
+    return SettingsService.instance;
   }
 
   async load() {
@@ -24,4 +28,5 @@ class SettingsService {
 }
 
 const settingsService = new SettingsService();
+settingsService.load();
 export default settingsService;

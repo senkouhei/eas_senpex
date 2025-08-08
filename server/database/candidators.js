@@ -93,7 +93,7 @@ export async function getCandidatorsCountWithTwilioSMS() {
   const { data, error, count } = await supabase
     .from('candidators')
     .select('*', { count: 'exact', head: true })
-    .eq('sms_transferred', true);
+    .eq('sms_transferred', 1);
   if (error) throw error;
   return count;
 }
@@ -102,7 +102,7 @@ export async function getCandidatorsCountWithTwilioSMS() {
 // for get candidators by status
 export async function getCandidatorsByStatus(status, page, limit, search) {
   // Use coalesce to select name or gmail_name as name
-  let query = supabase.from('candidators').select('*, coalesce(name, gmail_name) as name', { count: 'exact' });
+  let query = supabase.from('candidators_with_name').select('*', { count: 'exact' });
   switch (status) {
     case 'fetched':
       query = query.or('resume_url.not.is.null,phone_number.not.is.null')
@@ -111,7 +111,7 @@ export async function getCandidatorsByStatus(status, page, limit, search) {
       query = query.neq('phone_number', null);
       break;
     case 'transferred':
-      query = query.eq('sms_transferred', true);
+      query = query.eq('sms_transferred', 1);
       break;
     default:
       // no filter

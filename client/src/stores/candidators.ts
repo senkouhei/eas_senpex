@@ -8,15 +8,15 @@ const api = axios.create({
 
 interface Candidator {
   id: number
-  name: string
+  name_display: string
   email: string
   phone_number: string
   city: string
   state: string
   url: string
-  resume_fetched: boolean
-  contact_extracted: boolean
-  sms_transferred: boolean
+  resume_fetched: number
+  contact_extracted: number
+  sms_transferred: number
   sms_status: string
   created_at: string
   updated_at: string
@@ -74,11 +74,17 @@ export const useCandidatorsStore = defineStore('candidators', {
       }
     },
 
-    async fetchPaginated({ page = 1, limit = 20, search = '' }) {
+    async fetchPaginated({ status = 'all', page = 1, limit = 20, search = '' }) {
       this.loading = true
       this.error = null
+      console.log('fetching paginated')
       try {
-        const response = await api.get('/api/candidators', { params: { page, limit, search } })
+        let url = '/api/candidators'
+        if (status != 'all') {  
+          url = `/api/candidators/status/${status}`
+        }
+        console.log(url)
+        const response = await api.get(url, { params: { page, limit, search } })
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
