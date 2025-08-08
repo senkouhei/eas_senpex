@@ -20,7 +20,7 @@ import authRoutes from './routes/auth.js';
 
   const app = express();
   const PORT = process.env.PORT || 5000;
-  const HOST = process.env.HOST || '0.0.0.0';
+  const HOST = process.env.HOST || 'localhost';
   const server = http.createServer(app);
   // Middleware
   app.use(cors());
