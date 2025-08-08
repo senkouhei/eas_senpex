@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: (import.meta as any).env?.BACKEND_API_URL || 'http://localhost:5000',
+        target: (import.meta as any).env?.VITE_BACKEND_API_URL || 'http://localhost:5000',
         changeOrigin: true
       }
     }

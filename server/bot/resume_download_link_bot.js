@@ -12,7 +12,7 @@ const totalCandidators = await getCandidatorsCountWithUrl();
 
 let ws = null;
 function connectWebSocket() {
-  ws = new WebSocket(process.env.WS_URL || 'ws://localhost:5000/ws');
+  ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
   ws.on('open', () => {
     broadcast({ bot: 'resume_download_link_bot.js', running: true, count: totalCandidators });
   });
