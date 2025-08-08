@@ -20,7 +20,6 @@ import authRoutes from './routes/auth.js';
 
   const app = express();
   const PORT = process.env.PORT || 5000;
-  const HOST = process.env.HOST || 'localhost';
   const server = http.createServer(app);
   // Middleware
   app.use(cors());
@@ -39,17 +38,17 @@ import authRoutes from './routes/auth.js';
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
 
-  server.listen(PORT, HOST, async () => {
+  server.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Server accessible at http://${HOST}:${PORT}`);
+    console.log(`Server accessible at http://localhost:${PORT}`);
     // Initialize WebSocket server
-    try {
-      await initWebSocketServer(server);
-      startAllBots();
-    } catch (err) {
-      console.error('Failed to initialize WebSocket server:', err);
-      process.exit(1); // Optionally exit if this is critical
-    }
+    // try {
+    //   await initWebSocketServer(server);
+    //   startAllBots();
+    // } catch (err) {
+    //   console.error('Failed to initialize WebSocket server:', err);
+    //   process.exit(1); // Optionally exit if this is critical
+    // }
   });
 })();
 

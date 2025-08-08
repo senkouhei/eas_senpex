@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: ((import.meta as any).env?.HOST && (import.meta as any).env?.PORT) ?
-           'http://' + (import.meta as any).env?.HOST + ":" + (import.meta as any).env?.PORT : 'http://localhost:5000'
+  baseURL: (import.meta as any).env?.PORT ?
+           'http://localhost:' + (import.meta as any).env?.PORT : 'http://localhost:5000'
 })
 
 interface Candidator {
