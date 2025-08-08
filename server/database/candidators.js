@@ -35,8 +35,8 @@ export async function getCandidatorsWithoutUrl() {
 
 
 // updateCandidatorDownloadLink
-export async function updateCandidatorDownloadLink(gmail_id, download_link) {
-  const { data, error } = await supabase.from('candidators').update({ resume_url: download_link }).eq('gmail_id', gmail_id);
+export async function updateCandidatorDownloadLink(gmail_id, download_link, resume_fetched) {
+  const { data, error } = await supabase.from('candidators').update({ resume_url: download_link, resume_fetched: resume_fetched ? 1 : 2 }).eq('gmail_id', gmail_id);
   if (error) throw error;
   return data;
 }
@@ -101,7 +101,8 @@ export async function getCandidatorsCountWithTwilioSMS() {
 
 // for get candidators by status
 export async function getCandidatorsByStatus(status, page, limit, search) {
-  let query = supabase.from('candidators').select('*', { count: 'exact' });
+  // Use coalesce to select name or gmail_name as name
+  let query = supabase.from('candidators').select('*, coalesce(name, gmail_name) as name', { count: 'exact' });
   switch (status) {
     case 'fetched':
       query = query.or('resume_url.not.is.null,phone_number.not.is.null')

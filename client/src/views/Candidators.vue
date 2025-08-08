@@ -66,7 +66,7 @@
           {{ candidatorsStore.error }}
         </div>
         
-        <div v-else-if="candidatorsStore.candidators.length === 0" class="p-8 text-center text-gray-500">
+        <div v-else-if="!Array.isArray(candidatorsStore.candidators) || candidatorsStore.candidators.length === 0" class="p-8 text-center text-gray-500">
           No candidators found.
         </div>
         
@@ -98,7 +98,7 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="candidator in candidatorsStore.candidators" :key="candidator.id">
+              <tr v-for="candidator in (Array.isArray(candidatorsStore.candidators) ? candidatorsStore.candidators : [])" :key="candidator.id">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky-col sticky-col-left bg-white z-10">
                   {{ candidator.name }}
                 </td>
@@ -123,16 +123,23 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div class="flex space-x-1">
-                    <span :class="candidator.resume_fetched ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" 
-                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    <span
+                      v-if="typeof candidator.resume_fetched === 'number'"
+                      :class="candidator.resume_fetched === 1 ? 'bg-green-100 text-green-800' : candidator.resume_fetched === 2 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                    >
                       Resume
                     </span>
-                    <span :class="candidator.contact_extracted ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" 
-                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    <span
+                      v-if="typeof candidator.contact_extracted === 'number'"
+                      :class="candidator.contact_extracted === 1 ? 'bg-green-100 text-green-800' : candidator.contact_extracted === 2 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'" 
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
                       Contact
                     </span>
-                    <span :class="candidator.sms_transferred ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" 
-                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    <span
+                      v-if="typeof candidator.sms_transferred === 'number'"
+                      :class="candidator.sms_transferred === 1 ? 'bg-green-100 text-green-800' : candidator.sms_transferred === 2 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'" 
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
                       SMS
                     </span>
                   </div>

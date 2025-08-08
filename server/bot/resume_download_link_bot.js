@@ -3,13 +3,16 @@
 import { getCandidatorsWithoutUrl, getCandidatorsCountWithUrl, updateCandidatorDownloadLink } from '../database/candidators.js';
 
 import WebSocket from 'ws';
-import axios from 'axios';
+import fetch from 'node-fetch';
+import * as cheerio from 'cheerio';
+import settingsService from '../services/SettingsService.js';
+import { URL } from 'url';
 
 const totalCandidators = await getCandidatorsCountWithUrl();
 
 let ws = null;
 function connectWebSocket() {
-  ws = new WebSocket('ws://localhost:5000/ws');
+  ws = new WebSocket(`ws://${process.env.HOST}:${process.env.PORT}/ws`);
   ws.on('open', () => {
     broadcast({ bot: 'resume_download_link_bot.js', running: true, count: totalCandidators });
   });
@@ -28,17 +31,26 @@ function broadcast(data) {
 
 let resume_download_link_bot_running = false;
 
-async function getDownloadLink(url) {
-  try {
-    const response = await axios.get('http://localhost:6000/get_resume_url', {
-      params: { url }
-    });
-    // Expecting the result in response.data.download_link or similar
-    return response.data.path || null;
-  } catch (err) {
-    console.error('Failed to get download link:', err.message);
-    return null;
+async function getResumeDownloadLink(url) {
+  const apiKey = settingsService.get('SCRAPERAPI_KEY');
+  const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
+  // Get the sa-final-url header
+  const finalUrl = response.headers.get('sa-final-url');
+  if (finalUrl) {
+    try {
+      const parsed = new URL(finalUrl);
+      const id = parsed.searchParams.get('id');
+      return id ? `https://employers.indeed.com/api/catws/public/resume/download?id=${encodeURIComponent(id)}&publicResumeTk=undefined` : null
+    } catch (e) {
+      console.error('Failed to parse sa-final-url:', e);
+      return null;
+    }
   }
+  // fallback: parse HTML if needed
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  const href = $('a[data-testid="header-download-resume-button"]').attr('href');
+  return href || null;
 }
 
 async function run() {
@@ -50,16 +62,18 @@ async function run() {
     for (const candidator of candidators) {
       try {
         if (candidator.url) {
-          const download_link = await getDownloadLink(candidator.url);
+          const download_link = await getResumeDownloadLink(candidator.url);
           if (!download_link) {
             console.log(`No download link found for ${candidator.gmail_id}`);
+            await updateCandidatorDownloadLink(candidator.gmail_id, null, false);
             continue;
           }
-          await updateCandidatorDownloadLink(candidator.gmail_id, download_link);
+          await updateCandidatorDownloadLink(candidator.gmail_id, download_link, true);
           count++;
           broadcast({ bot: 'resume_download_link_bot.js', running: true, count: totalCandidators + count });
         }
       } catch (err) {
+        await updateCandidatorDownloadLink(candidator.gmail_id, null, false);
         console.error(`Error processing candidator ${candidator.gmail_id}:`, err.message || err);
       }
     }

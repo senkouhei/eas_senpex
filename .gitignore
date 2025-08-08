@@ -41,3 +41,5 @@ client/**/*.js
 
 # Output from tests
 coverage/
+
+!client/src/shims-css.d.ts

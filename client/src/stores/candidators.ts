@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+const api = axios.create({
+  baseURL: ((import.meta as any).env?.VITE_API_URL && (import.meta as any).env?.VITE_API_URL) ?
+           'http://' + (import.meta as any).env?.HOST + ":" + (import.meta as any).env?.PORT : 'http://localhost:5000'
+})
+
 interface Candidator {
   id: number
   name: string
@@ -29,9 +34,8 @@ export const useCandidatorsStore = defineStore('candidators', {
     async fetchCandidators() {
       this.loading = true
       this.error = null
-      
       try {
-        const response = await axios.get('/api/candidators')
+        const response = await api.get('/api/candidators')
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
@@ -45,9 +49,8 @@ export const useCandidatorsStore = defineStore('candidators', {
     async fetchByStatus(status: string) {
       this.loading = true
       this.error = null
-      
       try {
-        const response = await axios.get(`/api/candidators/status/${status}`)
+        const response = await api.get(`/api/candidators/status/${status}`)
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
@@ -60,7 +63,7 @@ export const useCandidatorsStore = defineStore('candidators', {
 
     async updateCandidator(id: number, data: Partial<Candidator>) {
       try {
-        const response = await axios.put(`/api/candidators/${id}`, data)
+        const response = await api.put(`/api/candidators/${id}`, data)
         const index = this.candidators.findIndex(c => c.id === id)
         if (index !== -1) {
           this.candidators[index] = response.data
@@ -75,7 +78,7 @@ export const useCandidatorsStore = defineStore('candidators', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get('/api/candidators', { params: { page, limit, search } })
+        const response = await api.get('/api/candidators', { params: { page, limit, search } })
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
