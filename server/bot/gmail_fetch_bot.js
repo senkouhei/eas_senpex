@@ -46,12 +46,16 @@ async function run() {
       for (const email of unknownIds) {
         try {
           const data = await googleService.getEmailHtmlAndSender(email);
-          await insertCandidator({
-            gmail_id: email,
-            gmail_name: data.sender,
-            gmail_timestamp: data.datetime,
-            url: data.resumeLink
-          });
+          if (data.resumeLink) {
+            await insertCandidator({
+              gmail_id: email,
+              gmail_name: data.sender,
+              gmail_timestamp: data.datetime,
+              url: data.resumeLink
+            });
+          } else {
+            console.log("candidate's resume link not found", email);
+          }
           insertedCount++;
           broadcast({bot: 'gmail_fetch_bot.js', running: true, count: totalCandidators + insertedCount});
           console.log('insertedCount', insertedCount);
