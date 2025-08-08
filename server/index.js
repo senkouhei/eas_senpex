@@ -6,11 +6,7 @@ import { initWebSocketServer } from './utils/websocket.js';
 import { startAllBots } from './bot/bot_manager.js';
 import settingsService from './services/SettingsService.js';
 import { getGoogleServiceInstance } from './utils/google.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Routes
 import candidatorRoutes from './routes/candidators.js';
@@ -32,14 +28,6 @@ import authRoutes from './routes/auth.js';
 
   // Google Service
   getGoogleServiceInstance();
-
-  // Serve static files from client/dist
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-
-  // Fallback to index.html for SPA
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
-  });
 
   app.use('/api/candidators', candidatorRoutes);
   app.use('/api/settings', settingsRoutes);
