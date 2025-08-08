@@ -2,13 +2,9 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { reactive } from 'vue'
 
-interface DashboardStats {
-  totalCandidators: number
-  fetchedResumes: number
-  extractedContacts: number
-  transferredSMS: number
-  lastUpdated: string
-}
+const api = axios.create({
+  baseURL: (import.meta as any).env?.VITE_BACKEND_API_URL || 'http://localhost:5000'
+})
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
@@ -35,7 +31,7 @@ export const useDashboardStore = defineStore('dashboard', {
       this.error = null
       
       try {
-        const response = await axios.get('/api/dashboard/stats')
+        const response = await api.get('/api/dashboard/stats')
         this.stats = response.data
       } catch (error) {
         this.error = 'Failed to fetch dashboard stats'

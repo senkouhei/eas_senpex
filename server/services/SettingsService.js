@@ -22,6 +22,10 @@ class SettingsService {
     return this.settings[key];
   }
 
+  getSettings() {
+    return this.settings;
+  }
+
   async reload() {
     await this.load();
   }

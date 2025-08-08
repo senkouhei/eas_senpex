@@ -2,18 +2,22 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 
 interface Settings {
-  id?: number
-  openai_api_key: string
-  telnyx_api_key: string
-  telnyx_phone_number: string
+  OPENAI_API_KEY: string
+  TWILIO_API_KEY: string
+  TWILIO_PHONE_NUMBER: string
+  SCRAPERAPI_KEY: string
 }
+const api = axios.create({
+  baseURL: (import.meta as any).env?.VITE_BACKEND_API_URL || 'http://localhost:5000'
+})
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     settings: {
-      openai_api_key: '',
-      telnyx_api_key: '',
-      telnyx_phone_number: ''
+      OPENAI_API_KEY: '',
+      TWILIO_API_KEY: '',
+      TWILIO_PHONE_NUMBER: '',
+      SCRAPERAPI_KEY: ''
     } as Settings,
     loading: false,
     error: null as string | null,
@@ -26,7 +30,7 @@ export const useSettingsStore = defineStore('settings', {
       this.error = null
       
       try {
-        const response = await axios.get('/api/settings')
+        const response = await api.get('/api/settings')
         this.settings = response.data
       } catch (error) {
         this.error = 'Failed to fetch settings'
@@ -42,7 +46,7 @@ export const useSettingsStore = defineStore('settings', {
       this.success = false
       
       try {
-        const response = await axios.put('/api/settings', settings)
+        const response = await api.put('/api/settings', settings)
         this.settings = response.data
         this.success = true
         setTimeout(() => { this.success = false }, 3000)

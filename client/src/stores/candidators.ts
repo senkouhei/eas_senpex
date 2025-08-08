@@ -5,8 +5,6 @@ const api = axios.create({
   baseURL: (import.meta as any).env?.VITE_BACKEND_API_URL || 'http://localhost:5000'
 })
 
-console.log("VITE_BACKEND_API_URL", (import.meta as any).env?.VITE_BACKEND_API_URL)
-
 interface Candidator {
   id: number
   name_display: string
