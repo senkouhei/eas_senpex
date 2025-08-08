@@ -9,7 +9,7 @@
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
     "server": "nodemon server/index.js",
     "client": "cd client && npm run dev",
-    "build": "del /s *.vue.d.ts && cd client && VITE_WS_URL=wss://candidates-contactor.onrender.com/ws VITE_BACKEND_API_URL=https://candidates-contactor.onrender.com npm run build npm run build",
+    "build": "cd client && VITE_WS_URL=wss://candidates-contactor.onrender.com/ws VITE_BACKEND_API_URL=https://candidates-contactor.onrender.com npm run build npm run build",
     "install-client": "cd client && npm install",
     "install-server": "npm install",
     "postinstall": "npm run install-client",
