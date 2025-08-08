@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: ((import.meta as any).env?.VITE_API_URL && (import.meta as any).env?.VITE_API_URL) ?
-           'http://' + (import.meta as any).env?.HOST + ":" + (import.meta as any).env?.PORT : 'http://localhost:5000'
+  baseURL: ((import.meta as any).env?.HTTPS && (import.meta as any).env?.HOST && (import.meta as any).env?.PORT) ?
+           ((import.meta as any).env?.HTTPS ? 'https://' : 'http://') + (import.meta as any).env?.HOST + ":" + (import.meta as any).env?.PORT : 'http://localhost:5000'
 })
 
 interface Candidator {
@@ -39,8 +39,8 @@ export const useCandidatorsStore = defineStore('candidators', {
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
-        this.error = 'Failed to fetch candidators'
-        console.error('Error fetching candidators:', error)
+        this.error = 'Failed to fetch candidates'
+        console.error('Error fetching candidates:', error)
       } finally {
         this.loading = false
       }
@@ -54,8 +54,8 @@ export const useCandidatorsStore = defineStore('candidators', {
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
-        this.error = 'Failed to fetch candidators by status'
-        console.error('Error fetching candidators by status:', error)
+        this.error = 'Failed to fetch candidates by status'
+        console.error('Error fetching candidates by status:', error)
       } finally {
         this.loading = false
       }
@@ -88,8 +88,8 @@ export const useCandidatorsStore = defineStore('candidators', {
         this.candidators = response.data.data
         this.totalCount = response.data.count
       } catch (error) {
-        this.error = 'Failed to fetch candidators'
-        console.error('Error fetching paginated candidators:', error)
+        this.error = 'Failed to fetch candidates'
+        console.error('Error fetching paginated candidates:', error)
       } finally {
         this.loading = false
       }

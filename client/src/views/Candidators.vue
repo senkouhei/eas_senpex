@@ -19,8 +19,8 @@
     <div class="px-4 py-6 sm:px-0">
       <div class="sm:flex sm:items-center mb-6">
         <div class="sm:flex-auto">
-          <h1 class="text-3xl font-bold text-gray-900">Candidators</h1>
-          <p class="mt-2 text-sm text-gray-700">A list of all candidators with their current status.</p>
+          <h1 class="text-3xl font-bold text-gray-900">Candidates</h1>
+          <p class="mt-2 text-sm text-gray-700">A list of all candidates with their current status.</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@
       <!-- Candidators Table -->
       <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <div v-if="candidatorsStore.loading" class="p-8 text-center">
-          <div class="animate-pulse">Loading candidators...</div>
+          <div class="animate-pulse">Loading candidates...</div>
         </div>
         
         <div v-else-if="candidatorsStore.error" class="p-8 text-center text-red-600">
@@ -67,7 +67,7 @@
         </div>
         
         <div v-else-if="!Array.isArray(candidatorsStore.candidators) || candidatorsStore.candidators.length === 0" class="p-8 text-center text-gray-500">
-          No candidators found.
+          No candidates found.
         </div>
         
         <div v-else class="overflow-x-auto">

@@ -127,16 +127,29 @@ class GoogleService {
 
     let datetime = Math.floor(msg.data.internalDate);;
 
-    const parts = msg.data.payload.parts || [];
-    let html = null;
-    for (const part of parts) {
-      if (part.mimeType === 'text/html') {
-        const data = part.body.data;
-        html = Buffer.from(data, 'base64').toString('utf-8');
-        break;
+    // Recursively search for text/html part
+    function findHtmlPart(parts) {
+      for (const part of parts) {
+        if (part.mimeType === 'text/html' && part.body && part.body.data) {
+          return Buffer.from(part.body.data, 'base64').toString('utf-8');
+        }
+        if (part.parts && Array.isArray(part.parts)) {
+          const html = findHtmlPart(part.parts);
+          if (html) return html;
+        }
       }
+      return null;
     }
 
+    let html = null;
+    const payload = msg.data.payload;
+    if (payload.parts && Array.isArray(payload.parts)) {
+      html = findHtmlPart(payload.parts);
+    }
+    // Fallback: single-part message
+    if (!html && payload.mimeType === 'text/html' && payload.body && payload.body.data) {
+      html = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+    }
     // Ensure html is a string for cheerio.load
     const $ = cheerio.load(typeof html === 'string' ? html : '');
     let resumeLink = null;

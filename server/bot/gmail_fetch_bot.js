@@ -8,7 +8,7 @@ const totalCandidators = await getCountOfAllCandidators();
 
 let ws = null;
 function connectWebSocket() {
-  ws = new WebSocket('ws://localhost:5000/ws');
+  ws = new WebSocket(`${process.env.HTTPS ? 'wss://' : 'ws://'}${process.env.HOST}:${process.env.PORT}/ws`);
   ws.on('open', () => {
     broadcast({ bot: 'gmail_fetch_bot.js', running: true, count: totalCandidators });
   });

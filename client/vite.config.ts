@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: ((import.meta as any).env?.HTTPS ? 'https://' : 'http://') + (import.meta as any).env?.HOST + ":" + (import.meta as any).env?.PORT,
         changeOrigin: true
       }
     }
