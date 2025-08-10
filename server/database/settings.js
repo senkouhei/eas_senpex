@@ -1,4 +1,5 @@
 import supabase from './supabase.js'
+import settingsService from '../services/SettingsService.js';
 
 // Get all settings
 export async function getAllSettings() {
@@ -18,5 +19,6 @@ export async function updateSettingsBulk(settingsObj) {
   for (const result of results) {
     if (result.error) throw result.error;
   }
+  await settingsService.reload();
   return { success: true };
 }

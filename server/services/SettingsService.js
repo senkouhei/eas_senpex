@@ -6,6 +6,7 @@ class SettingsService {
       this.settings = {};
       // Do not call this.load() here; require explicit load
       SettingsService.instance = this;
+      console.log('SettingsService constructor');
     }
     return SettingsService.instance;
   }
@@ -32,5 +33,5 @@ class SettingsService {
 }
 
 const settingsService = new SettingsService();
-settingsService.load();
+await settingsService.load();
 export default settingsService;

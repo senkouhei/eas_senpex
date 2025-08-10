@@ -17,8 +17,6 @@ import authRoutes from './routes/auth.js';
 (async () => {
   dotenv.config();
 
-  await settingsService.load();
-
   const app = express();
   const PORT = process.env.PORT || 5000;
   const server = http.createServer(app);

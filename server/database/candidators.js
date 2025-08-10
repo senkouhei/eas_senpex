@@ -21,7 +21,7 @@ export async function insertCandidator({ gmail_id, gmail_name, gmail_timestamp, 
 
 // getCandidatorsWithoutContactInfo
 export async function getCandidatorsWithoutContactInfo() {
-  const { data, error } = await supabase.from('candidators').select('*').eq('contact_extracted', false);
+  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null);
   if (error) throw error;
   return data;
 }

@@ -33,7 +33,7 @@ let resume_download_link_bot_running = false;
 
 async function getResumeDownloadLink(url) {
   const apiKey = settingsService.get('SCRAPERAPI_KEY');
-  const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
+  const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`); //&render=true
   // Get the sa-final-url header
   const finalUrl = response.headers.get('sa-final-url');
   if (finalUrl) {
