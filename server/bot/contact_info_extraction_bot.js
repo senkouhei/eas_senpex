@@ -7,9 +7,11 @@ import axios from 'axios';
 import { OpenAI } from 'openai';
 import Tesseract from 'tesseract.js';
 import * as mammoth from 'mammoth';
-import { convert } from 'pdf-poppler';
-import fs from 'fs';
 import settingsService from '../services/SettingsService.js';
+import { PDFiumLibrary } from "@hyzyla/pdfium";
+import fs from 'fs';
+import { promises as fsp } from 'fs';
+import sharp from 'sharp';
 
 const totalCandidators = await getCandidatorsCountWithContactInfo();
 const OPENAI_API_KEY = settingsService.get('OPENAI_API_KEY');
@@ -36,22 +38,61 @@ function broadcast(data) {
 
 let contact_info_extraction_bot_running = false;
 
+async function renderFunction(options) {
+  return await sharp(options.data, {
+    raw: {
+      width: options.width,
+      height: options.height,
+      channels: 4,
+    },
+  })
+    .png()
+    .toBuffer();
+}
+
+
 async function extractTextFromPdf(pdfPath) {
   const outputDir = path.join(process.cwd(), 'tmp_files');
   fs.mkdirSync(outputDir, { recursive: true });
 
-  await convert(pdfPath, {
-    format: 'png',
-    out_dir: outputDir,
-    out_prefix: 'page',
-    page: null
-  });
+  // Convert PDF pages to images using pdf2pic
+  const buff = await fsp.readFile(pdfPath);
 
-  const files = fs.readdirSync(outputDir).filter(f => f.endsWith('.png'));
+  // Initialize the library, you can do this once for the whole application
+  // and reuse the library instance.
+  const library = await PDFiumLibrary.init();
+
+  // Load the document from the buffer
+  // You can also pass "password" as the second argument if the document is encrypted.
+  const document = await library.loadDocument(buff);
+
+  // Iterate over the pages, render them to PNG images and
+  // save to the output folder
+  let index = 0;
+  for (const page of document.pages()) {
+    console.log(`${page.number} - rendering...`);
+
+    // Render PDF page to PNG image
+    const image = await page.render({
+      scale: 3, // 3x scale (72 DPI is the default)
+      render: renderFunction,  // sharp function to convert raw bitmap data to PNG
+    });
+
+    // Save the PNG image to the output folder
+    await fsp.writeFile(path.join(outputDir, `${index}.png`), Buffer.from(image.data));
+    index++;
+  }
+
+  // Do not forget to destroy the document and the library
+  // when you are done.
+  document.destroy();
+  library.destroy();
+  // Get number of pages
+
   let fullText = '';
-
-  for (const file of files) {
-    const { data: { text } } = await Tesseract.recognize(path.join(outputDir, file), 'eng');
+  for (let i = 0; i < index; i++) {
+    const imgPath = path.join(outputDir, `${i}.png`);
+    const { data: { text } } = await Tesseract.recognize(imgPath, 'eng');
     fullText += text + '\n';
   }
 
@@ -125,7 +166,9 @@ async function getFilenameFromUrl(url) {
 }
 
 async function extractContactInfo(text) {
-  const prompt = `Extract the following information from this resume text:
+  try {
+
+    const prompt = `Extract the following information from this resume text:
 - Name
 - Email
 - Phone number
@@ -136,24 +179,49 @@ Resume text:
 ${text}
 
 Respond in JSON format with keys: name, email, phone_number, city, state.`;
-
-  const response = await client.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: "You are a helpful assistant." },
-      { role: "user", content: prompt }
-    ],
-    temperature: 0,
-  });
-
-  let output = response.choices[0].message.content.trim();
-
-  // Remove code block markers if present
-  if (output.startsWith("```")) {
-    output = output.replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim();
+  
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0,
+    });
+  
+    let output = response.choices[0].message.content.trim();
+  
+    // Remove code block markers if present
+    if (output.startsWith("```")) {
+      output = output.replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim();
+    }
+  
+    return JSON.parse(output);
+  } catch (err) {
+    console.error(`Failed to extract contact info:`, err.message);
   }
+}
 
-  return JSON.parse(output);
+function formatPhoneNumber(phone) {
+  if (!phone) return '';
+  // Remove all non-digit characters
+  let digits = phone.replace(/\D/g, '');
+  // Remove leading 1 if present (for US numbers)
+  if (digits.length === 11 && digits.startsWith('1')) {
+    digits = digits.slice(1);
+  }
+  // Only format if 10 digits
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  // If already in E.164 or not 10/11 digits, return as is
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+${digits}`;
+  }
+  if (digits.length > 0 && phone.startsWith('+')) {
+    return phone;
+  }
+  return '';
 }
 
 async function run() {
@@ -185,8 +253,8 @@ async function run() {
       } else {
         console.log('Unknown file type, possibly .txt');
       }
-      
       const info = await extractContactInfo(text);
+      info.phone_number = formatPhoneNumber(info.phone_number);
       await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1});
       count++;
       broadcast({ bot: 'contact_info_extraction_bot.js', running: true, count: totalCandidators + count });
