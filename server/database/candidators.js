@@ -21,14 +21,14 @@ export async function insertCandidator({ gmail_id, gmail_name, gmail_timestamp, 
 
 // getCandidatorsWithoutContactInfo
 export async function getCandidatorsWithoutContactInfo() {
-  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null);
+  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('contact_extracted', 0);
   if (error) throw error;
   return data;
 }
 
 // getCandidatorsWithoutDownloadLink
 export async function getCandidatorsWithoutUrl() {
-  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).is('resume_fetched', 0).limit(100000);
   if (error) throw error;
   return data;
 }

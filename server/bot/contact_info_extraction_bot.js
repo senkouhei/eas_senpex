@@ -196,7 +196,6 @@ async function run() {
     } catch (err) {
       await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
       console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
-      broadcast({ bot: 'contact_info_extraction_bot.js', running: false, count: totalCandidators + count });
     }
   }
 }

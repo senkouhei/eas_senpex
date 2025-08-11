@@ -53,12 +53,12 @@ async function run() {
               gmail_timestamp: data.datetime,
               url: data.resumeLink
             });
+            insertedCount++;
+            broadcast({bot: 'gmail_fetch_bot.js', running: true, count: totalCandidators + insertedCount});
+            console.log('insertedCount', insertedCount);
           } else {
             console.log("candidate's resume link not found", email);
           }
-          insertedCount++;
-          broadcast({bot: 'gmail_fetch_bot.js', running: true, count: totalCandidators + insertedCount});
-          console.log('insertedCount', insertedCount);
         } catch (err) {
           console.error(err.message || err);
         }

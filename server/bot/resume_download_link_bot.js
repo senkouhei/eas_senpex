@@ -33,7 +33,7 @@ let resume_download_link_bot_running = false;
 
 async function getResumeDownloadLink(url) {
   const apiKey = settingsService.get('SCRAPERAPI_KEY');
-  const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`); //&render=true
+  const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
   // Get the sa-final-url header
   const finalUrl = response.headers.get('sa-final-url');
   if (finalUrl) {
@@ -71,6 +71,7 @@ async function run() {
           await updateCandidatorDownloadLink(candidator.gmail_id, download_link, true);
           count++;
           broadcast({ bot: 'resume_download_link_bot.js', running: true, count: totalCandidators + count });
+          console.log(`Updated download link for ${candidator.gmail_id}`);
         }
       } catch (err) {
         await updateCandidatorDownloadLink(candidator.gmail_id, null, false);
