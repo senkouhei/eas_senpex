@@ -13,6 +13,7 @@ import fs from 'fs';
 import { promises as fsp } from 'fs';
 import sharp from 'sharp';
 import { formatPhoneNumber } from '../utils/phone.js';
+import { extractContactInfo } from '../utils/openai.js';
 
 const totalCandidators = await getCandidatorsCountWithContactInfo();
 const OPENAI_API_KEY = settingsService.get('OPENAI_API_KEY');
@@ -164,44 +165,6 @@ async function getFilenameFromUrl(url) {
   const contentDisposition = response.headers['content-disposition'];
   return getFilenameFromContentDisposition(contentDisposition);
 }
-
-async function extractContactInfo(text) {
-  try {
-
-    const prompt = `Extract the following information from this resume text:
-- Name
-- Email
-- Phone number
-- City
-- State
-
-Resume text:
-${text}
-
-Respond in JSON format with keys: name, email, phone_number, city, state.`;
-  
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0,
-    });
-  
-    let output = response.choices[0].message.content.trim();
-  
-    // Remove code block markers if present
-    if (output.startsWith("```")) {
-      output = output.replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim();
-    }
-  
-    return JSON.parse(output);
-  } catch (err) {
-    console.error(`Failed to extract contact info:`, err.message);
-  }
-}
-
 
 async function run() {
   let count = 0;

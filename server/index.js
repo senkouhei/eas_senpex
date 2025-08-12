@@ -13,6 +13,7 @@ import candidatorRoutes from './routes/candidators.js';
 import settingsRoutes from './routes/settings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import authRoutes from './routes/auth.js';
+import smsRoutes from './routes/sms.js';
 
 (async () => {
   dotenv.config();
@@ -31,6 +32,7 @@ import authRoutes from './routes/auth.js';
   app.use('/api/settings', settingsRoutes);
   app.use('/api/dashboard', dashboardRoutes); 
   app.use('/api/auth', authRoutes);
+  app.use('/api/sms', smsRoutes);
 
   // Health check
   app.get('/api/health', (req, res) => {
