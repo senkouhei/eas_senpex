@@ -1,3 +1,8 @@
+import { OpenAI } from 'openai';
+import settingsService from '../services/SettingsService.js';
+const OPENAI_API_KEY = settingsService.get('OPENAI_API_KEY');
+const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+
 export async function extractContactInfo(text) {
   try {
 

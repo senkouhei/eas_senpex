@@ -8,14 +8,16 @@ const router = express.Router();
 
 router.post('/reply', async (req, res) => {
   try {
-    console.log('Received SMS reply:', req.body);
     const { from, body } = req.body;
+    console.log('Received SMS reply:', from, body);
+    const reply = await replyToSMS(body);
+    
     const replyObj = {
-      from,
+      from: from,
       message: body,
+      response: reply,
     }
     await insertReply(replyObj);
-    const reply = await replyToSMS(body);
     const twiml = new MessagingResponse();
 
     twiml.message(reply || 'Sorry, there was an error processing your message.');
@@ -24,7 +26,7 @@ router.post('/reply', async (req, res) => {
   } catch (err) {
     console.error('Error in /reply route:', err);
     const twiml = new MessagingResponse();
-    twiml.message('Sorry, there was an error processing your message.');
+    twiml.message('Sorry, there was an error processing your message.' + err.message);
     res.type('text/xml').status(500).send(twiml.toString());
   }
 });

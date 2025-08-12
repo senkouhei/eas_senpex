@@ -4,10 +4,8 @@ import { getCandidatorsWithoutContactInfo, updateCandidatorContactInfo, getCandi
 import WebSocket from 'ws';
 import path from 'path';
 import axios from 'axios';
-import { OpenAI } from 'openai';
 import Tesseract from 'tesseract.js';
 import * as mammoth from 'mammoth';
-import settingsService from '../services/SettingsService.js';
 import { PDFiumLibrary } from "@hyzyla/pdfium";
 import fs from 'fs';
 import { promises as fsp } from 'fs';
@@ -16,8 +14,6 @@ import { formatPhoneNumber } from '../utils/phone.js';
 import { extractContactInfo } from '../utils/openai.js';
 
 const totalCandidators = await getCandidatorsCountWithContactInfo();
-const OPENAI_API_KEY = settingsService.get('OPENAI_API_KEY');
-const client = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 let ws = null;
 function connectWebSocket() {
