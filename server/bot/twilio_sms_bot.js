@@ -41,7 +41,7 @@ async function run() {
       await client.messages.create({
         body: "Earn an additional $100 bonus after every 5 completed deliveries when you deliver with Senpex!\nRegister now to learn more:\nhttps://senpexwebinars.com/\nJoin our daily webinars hosted by CEO & Co-Founder, Sean Modd and the Head of Dispatching, Kali Norman.\n",
         from: formatPhoneNumber(fromNumber),
-        to: formatPhoneNumber(c.phone)
+        to: formatPhoneNumber(c.phone_number)
       });
       await setCandidatorSMSStatus(c.gmail_id, 1);
       count++;
