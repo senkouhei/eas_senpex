@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS settings (
   openai_api_key VARCHAR(255),
   telnyx_api_key VARCHAR(255),
   telnyx_phone_number VARCHAR(50),
+  twilio_auth_token VARCHAR(255),
+  twilio_account_sid VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -28,8 +30,8 @@ CREATE TABLE IF NOT EXISTS candidators (
 );
 
 -- Insert default settings
-INSERT INTO settings (openai_api_key, telnyx_api_key, telnyx_phone_number) 
-VALUES ('', '', '') 
+INSERT INTO settings (openai_api_key, telnyx_api_key, telnyx_phone_number, twilio_auth_token, twilio_account_sid) 
+VALUES ('', '', '', '', '') 
 ON CONFLICT DO NOTHING;
 
 -- Insert sample candidators

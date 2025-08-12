@@ -25,11 +25,8 @@ function broadcast(data) {
   ws.send(msg);
 }
 
-let gmail_fetch_bot_running = false;
 
 async function run() {
-  if (gmail_fetch_bot_running) return;
-  gmail_fetch_bot_running = true;
   try {
     const googleService = getGoogleServiceInstance();
     if (googleService.init) await googleService.init();
@@ -66,8 +63,6 @@ async function run() {
     }
   } catch (err) {
     console.error(err.message || err);
-  } finally {
-    gmail_fetch_bot_running = false;
   }
 }
 

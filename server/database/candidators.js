@@ -98,6 +98,17 @@ export async function getCandidatorsCountWithTwilioSMS() {
   return count;
 }
 
+export async function getCandidatorsToNotify() {
+  const { data, error } = await supabase.from('candidators').select('*').neq('phone_number', null).neq('sms_transferred', 1).limit(100000);
+  if (error) throw error;
+  return data;
+}
+
+export async function setCandidatorSMSStatus(gmail_id, status) {
+  const { data, error } = await supabase.from('candidators').update({ sms_transferred: status }).eq('gmail_id', gmail_id);
+  if (error) throw error;
+  return data;
+}
 
 // for get candidators by status
 export async function getCandidatorsByStatus(status, page, limit, search) {

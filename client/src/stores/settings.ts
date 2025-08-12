@@ -3,7 +3,8 @@ import axios from 'axios'
 
 interface Settings {
   OPENAI_API_KEY: string
-  TWILIO_API_KEY: string
+  TWILIO_AUTH_TOKEN: string
+  TWILIO_ACCOUNT_SID: string
   TWILIO_PHONE_NUMBER: string
   SCRAPERAPI_KEY: string
 }
@@ -15,7 +16,8 @@ export const useSettingsStore = defineStore('settings', {
   state: () => ({
     settings: {
       OPENAI_API_KEY: '',
-      TWILIO_API_KEY: '',
+      TWILIO_AUTH_TOKEN: '',
+      TWILIO_ACCOUNT_SID: '',
       TWILIO_PHONE_NUMBER: '',
       SCRAPERAPI_KEY: ''
     } as Settings,

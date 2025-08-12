@@ -89,19 +89,19 @@
                 </div>
 
                 <div>
-                  <label for="twilio_api_key" class="block text-sm font-medium text-gray-700">
-                    Twilio API Key
+                  <label for="twilio_auth_token" class="block text-sm font-medium text-gray-700">
+                    Twilio Auth Token
                   </label>
                   <div class="mt-1 flex items-center gap-2">
                     <input
                       :type="showTwilioKey ? 'text' : 'password'"
-                      name="twilio_api_key"
-                      id="twilio_api_key"
-                      v-model="formData.TWILIO_API_KEY"
+                      name="twilio_auth_token"
+                      id="twilio_auth_token"
+                      v-model="formData.TWILIO_AUTH_TOKEN"
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
                       placeholder="KEY..."
                     />
-                    <button type="button" @click="copyToClipboard(formData.TWILIO_API_KEY)" class="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Copy">
+                    <button type="button" @click="copyToClipboard(formData.TWILIO_AUTH_TOKEN)" class="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Copy">
                       <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8a2 2 0 002-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8V6a2 2 0 00-2-2H8a2 2 0 00-2 2v2"/></svg>
                     </button>
                     <button type="button" @click="showTwilioKey = !showTwilioKey" class="p-2 rounded bg-gray-100 hover:bg-gray-200" title="View">
@@ -110,7 +110,33 @@
                     </button>
                   </div>
                   <p class="mt-2 text-sm text-gray-500">
-                    Your Twilio API key for SMS messaging functionality.
+                    Your Twilio Auth Token for SMS messaging functionality.
+                  </p>
+                </div>
+
+                <div>
+                  <label for="twilio_account_sid" class="block text-sm font-medium text-gray-700">
+                    Twilio Account SID
+                  </label>
+                  <div class="mt-1 flex items-center gap-2">
+                    <input
+                      :type="showTwilioSid ? 'text' : 'password'"
+                      name="twilio_account_sid"
+                      id="twilio_account_sid"
+                      v-model="formData.TWILIO_ACCOUNT_SID"
+                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
+                      placeholder="AC..."
+                    />
+                    <button type="button" @click="copyToClipboard(formData.TWILIO_ACCOUNT_SID)" class="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Copy">
+                      <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8a2 2 0 002-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8V6a2 2 0 00-2-2H8a2 2 0 00-2 2v2"/></svg>
+                    </button>
+                    <button type="button" @click="showTwilioSid = !showTwilioSid" class="p-2 rounded bg-gray-100 hover:bg-gray-200" title="View">
+                      <svg v-if="showTwilioSid" class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                      <svg v-else class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.94 17.94A10.05 10.05 0 0021.542 12c-1.274-4.057-5.065-7-9.542-7-1.018 0-2.007.127-2.958.366"/></svg>
+                    </button>
+                  </div>
+                  <p class="mt-2 text-sm text-gray-500">
+                    Your Twilio Account SID for SMS messaging functionality.
                   </p>
                 </div>
 
@@ -190,13 +216,15 @@ const settingsStore = useSettingsStore()
 const formData = reactive({
   SCRAPERAPI_KEY: '',
   OPENAI_API_KEY: '',
-  TWILIO_API_KEY: '',
+  TWILIO_AUTH_TOKEN: '',
+  TWILIO_ACCOUNT_SID: '',
   TWILIO_PHONE_NUMBER: ''
 })
 
 const showScraperApiKey = ref(false)
 const showOpenAiKey = ref(false)
 const showTwilioKey = ref(false)
+const showTwilioSid = ref(false)
 const showToast = ref(false)
 
 function copyToClipboard(value: string) {
@@ -217,7 +245,8 @@ onMounted(async () => {
   // Update form data with fetched settings
   formData.SCRAPERAPI_KEY = settingsStore.settings.SCRAPERAPI_KEY || ''
   formData.OPENAI_API_KEY = settingsStore.settings.OPENAI_API_KEY || ''
-  formData.TWILIO_API_KEY = settingsStore.settings.TWILIO_API_KEY || ''
+  formData.TWILIO_AUTH_TOKEN = settingsStore.settings.TWILIO_AUTH_TOKEN || ''
+  formData.TWILIO_ACCOUNT_SID = settingsStore.settings.TWILIO_ACCOUNT_SID || ''
   formData.TWILIO_PHONE_NUMBER = settingsStore.settings.TWILIO_PHONE_NUMBER || ''
 })
 </script>

@@ -29,7 +29,6 @@ function broadcast(data) {
   ws.send(msg);
 }
 
-let resume_download_link_bot_running = false;
 
 async function getResumeDownloadLink(url) {
   const apiKey = settingsService.get('SCRAPERAPI_KEY');
@@ -54,8 +53,6 @@ async function getResumeDownloadLink(url) {
 }
 
 async function run() {
-  if (resume_download_link_bot_running) return;
-  resume_download_link_bot_running = true;
   let count = 0;
   try {
     const candidators = await getCandidatorsWithoutUrl();
@@ -81,7 +78,6 @@ async function run() {
   } catch (err) {
     console.error(err.message || err);
   } finally {
-    resume_download_link_bot_running = false;
     broadcast({ bot: 'resume_download_link_bot.js', running: false, count: totalCandidators + count });
   }
 }

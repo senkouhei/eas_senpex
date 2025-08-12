@@ -16,9 +16,9 @@ router.get('/', async (req, res) => {
 
 // Update settings
 router.put('/', async (req, res) => {
-  const { OPENAI_API_KEY, SCRAPERAPI_KEY, TWILIO_API_KEY, TWILIO_PHONE_NUMBER } = req.body;
+  const { OPENAI_API_KEY, SCRAPERAPI_KEY, TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, TWILIO_PHONE_NUMBER } = req.body;
   try {
-    await updateSettingsBulk({ OPENAI_API_KEY, SCRAPERAPI_KEY, TWILIO_API_KEY, TWILIO_PHONE_NUMBER });
+    await updateSettingsBulk({ OPENAI_API_KEY, SCRAPERAPI_KEY, TWILIO_AUTH_TOKEN, TWILIO_ACCOUNT_SID, TWILIO_PHONE_NUMBER });
     res.json({ success: true });
   } catch (err) {
     console.error(err.message || err);

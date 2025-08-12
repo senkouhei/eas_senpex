@@ -12,7 +12,7 @@ const bots = [
   // 'gmail_fetch_bot.js',
   // 'resume_download_link_bot.js',
   // 'contact_info_extraction_bot.js',
-  // 'twilio_sms_bot.js',
+  'twilio_sms_bot.js',
 ];
 
 const processes = {};

@@ -12,6 +12,7 @@ import { PDFiumLibrary } from "@hyzyla/pdfium";
 import fs from 'fs';
 import { promises as fsp } from 'fs';
 import sharp from 'sharp';
+import { formatPhoneNumber } from '../utils/phone.js';
 
 const totalCandidators = await getCandidatorsCountWithContactInfo();
 const OPENAI_API_KEY = settingsService.get('OPENAI_API_KEY');
@@ -36,7 +37,6 @@ function broadcast(data) {
   ws.send(msg);
 }
 
-let contact_info_extraction_bot_running = false;
 
 async function renderFunction(options) {
   return await sharp(options.data, {
@@ -202,27 +202,6 @@ Respond in JSON format with keys: name, email, phone_number, city, state.`;
   }
 }
 
-function formatPhoneNumber(phone) {
-  if (!phone) return '';
-  // Remove all non-digit characters
-  let digits = phone.replace(/\D/g, '');
-  // Remove leading 1 if present (for US numbers)
-  if (digits.length === 11 && digits.startsWith('1')) {
-    digits = digits.slice(1);
-  }
-  // Only format if 10 digits
-  if (digits.length === 10) {
-    return `+1${digits}`;
-  }
-  // If already in E.164 or not 10/11 digits, return as is
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return `+${digits}`;
-  }
-  if (digits.length > 0 && phone.startsWith('+')) {
-    return phone;
-  }
-  return '';
-}
 
 async function run() {
   let count = 0;
