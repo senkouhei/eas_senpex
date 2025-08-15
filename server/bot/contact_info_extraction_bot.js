@@ -200,8 +200,13 @@ async function run() {
       fs.rmSync(outputDir, { recursive: true, force: true });
       console.log(`Updated contact info for ${c.gmail_id}`);
     } catch (err) {
-      await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
-      console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
+      if (err.status === 404) {
+        await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2, is_available: false});
+        console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
+      } else {
+        await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
+        console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
+      }
     }
   }
 }

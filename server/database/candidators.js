@@ -21,7 +21,7 @@ export async function insertCandidator({ gmail_id, gmail_name, gmail_timestamp, 
 
 // getCandidatorsWithoutContactInfo
 export async function getCandidatorsWithoutContactInfo() {
-  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null);
+  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('is_available', true);
   if (error) throw error;
   return data;
 }
@@ -63,7 +63,8 @@ export async function getUnknownGmailIds(gmailIds) {
 export async function getCountOfAllCandidators() {
   const { data, error, count } = await supabase
     .from('candidators')
-    .select('*', { count: 'exact', head: true }); // head: true returns no rows, just the count
+    .select('*', { count: 'exact', head: true })
+    .is('is_available', true); // head: true returns no rows, just the count
   if (error) throw error;
   return count;
 }
