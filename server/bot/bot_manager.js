@@ -26,7 +26,7 @@ export function startBot(bot) {
   proc.on('exit', (code, signal) => {
     broadcastBotStatus(bot, false);
     console.log(`[BotManager] ${bot} exited with code ${code} (signal: ${signal}). Restarting...`);
-    setTimeout(() => startBot(bot), 60000); // Restart after 2 seconds
+    setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
   });
 }
 
