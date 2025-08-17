@@ -68,7 +68,7 @@ async function run() {
           }
           await updateCandidatorDownloadLink(candidator.gmail_id, download_link, true);
           count++;
-          broadcast({ bot: 'resume_download_link_bot.js', running: true, count: awaitgetCandidatorsCountWithUrl() });
+          broadcast({ bot: 'resume_download_link_bot.js', running: true, count: await getCandidatorsCountWithUrl() });
           await logEvent('resume_download_link_bot.js', 'SUCCESS', 'Updated download link for ' + candidator.gmail_id, download_link);
         }
       } catch (err) {

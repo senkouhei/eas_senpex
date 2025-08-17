@@ -35,14 +35,14 @@ export async function getAllCandidates(page = 1, limit = 1000) {
 
 // getCandidatorsWithoutContactInfo
 export async function getCandidatorsWithoutContactInfo() {
-  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('is_available', true);
+  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('is_available', true).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
 
 // getCandidatorsWithoutDownloadLink
 export async function getCandidatorsWithoutUrl() {
-  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).order('gmail_timestamp', { ascending: true }).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
@@ -115,7 +115,7 @@ export async function getCandidatorsCountWithTwilioSMS() {
 }
 
 export async function getCandidatorsToNotify() {
-  const { data, error } = await supabase.from('candidators').select('*').neq('phone_number', null).neq('sms_transferred', 1).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').neq('phone_number', null).neq('sms_transferred', 1).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
