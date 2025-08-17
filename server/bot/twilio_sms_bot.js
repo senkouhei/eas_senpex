@@ -3,10 +3,10 @@
 import { getCandidatorsToNotify, setCandidatorSMSStatus, getCandidatorsCountWithTwilioSMS } from '../database/candidators.js';
 import twilio from 'twilio';
 import WebSocket from 'ws';
-import settingsService from '../services/SettingsService.js';
-const accountSid = settingsService.get('TWILIO_ACCOUNT_SID');
-const authToken = settingsService.get('TWILIO_AUTH_TOKEN');
-const fromNumber = settingsService.get('TWILIO_PHONE_NUMBER');
+import { getSetting } from '../database/settings.js';
+const accountSid = await getSetting('TWILIO_ACCOUNT_SID');
+const authToken = await getSetting('TWILIO_AUTH_TOKEN');
+const fromNumber = await getSetting('TWILIO_PHONE_NUMBER');
 const client = twilio(accountSid, authToken);
 import { formatPhoneNumber } from '../utils/phone.js';
 import { logEvent } from '../utils/log.js';

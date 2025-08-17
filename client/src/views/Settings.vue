@@ -158,7 +158,7 @@
                     Your Twilio phone number for sending SMS messages.
                   </p>
                 </div>
-              </div>
+              </div> <!-- End of settings form fields -->
               
               <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
                 <button
@@ -172,6 +172,23 @@
               </div>
             </div>
           </form>
+
+          <!-- Bot Controls Box -->
+          <div class="shadow sm:rounded-md sm:overflow-hidden mt-8">
+            <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+              <h3 class="text-md font-semibold mb-2">Bot Controls</h3>
+              <div v-for="bot in bots" :key="bot.key" class="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  :id="bot.key"
+                  v-model="botStatus[bot.key]"
+                  @change="toggleBot(bot.key)"
+                  class="mr-2"
+                />
+                <label :for="bot.key" class="text-sm">{{ bot.label }}</label>
+              </div>
+            </div>
+          </div>
 
           <!-- Success Message -->
           <div v-if="settingsStore.success" class="mt-4 rounded-md bg-green-50 p-4">
@@ -213,6 +230,32 @@ import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/24/solid'
 
 const settingsStore = useSettingsStore()
 
+const bots = [
+  { key: 'gmail_fetch_bot.js', label: 'Gmail Fetch Bot' },
+  { key: 'resume_download_link_bot.js', label: 'Resume Download Link Bot' },
+  { key: 'contact_info_extraction_bot.js', label: 'Contact Info Extraction Bot' },
+  { key: 'twilio_sms_bot.js', label: 'Twilio SMS Bot' },
+];
+
+const botStatus = ref<Record<string, boolean>>({
+  'gmail_fetch_bot.js': false,
+  'resume_download_link_bot.js': false,
+  'contact_info_extraction_bot.js': false,
+  'twilio_sms_bot.js': false,
+});
+
+async function toggleBot(botKey: string) {
+  try {
+    const response = await fetch('/api/settings/bots', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ botKey, enabled: botStatus.value[botKey] })
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 const formData = reactive({
   SCRAPERAPI_KEY: '',
   OPENAI_API_KEY: '',
@@ -248,6 +291,10 @@ onMounted(async () => {
   formData.TWILIO_AUTH_TOKEN = settingsStore.settings.TWILIO_AUTH_TOKEN || ''
   formData.TWILIO_ACCOUNT_SID = settingsStore.settings.TWILIO_ACCOUNT_SID || ''
   formData.TWILIO_PHONE_NUMBER = settingsStore.settings.TWILIO_PHONE_NUMBER || ''
+  botStatus.value['gmail_fetch_bot.js'] = (settingsStore.settings as any)['gmail_fetch_bot.js'] === 'ON'
+  botStatus.value['resume_download_link_bot.js'] = (settingsStore.settings as any)['resume_download_link_bot.js'] === 'ON'
+  botStatus.value['contact_info_extraction_bot.js'] = (settingsStore.settings as any)['contact_info_extraction_bot.js'] === 'ON'
+  botStatus.value['twilio_sms_bot.js'] = (settingsStore.settings as any)['twilio_sms_bot.js'] === 'ON'
 })
 </script>
 

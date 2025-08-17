@@ -19,7 +19,11 @@ export const useSettingsStore = defineStore('settings', {
       TWILIO_AUTH_TOKEN: '',
       TWILIO_ACCOUNT_SID: '',
       TWILIO_PHONE_NUMBER: '',
-      SCRAPERAPI_KEY: ''
+      SCRAPERAPI_KEY: '',
+      'gmail_fetch_bot.js': 'ON',
+      'resume_download_link_bot.js': 'ON',
+      'contact_info_extraction_bot.js': 'ON',
+      'twilio_sms_bot.js': 'ON',
     } as Settings,
     loading: false,
     error: null as string | null,
@@ -33,6 +37,7 @@ export const useSettingsStore = defineStore('settings', {
       
       try {
         const response = await api.get('/api/settings')
+        console.log(response.data)
         this.settings = response.data
       } catch (error) {
         this.error = 'Failed to fetch settings'

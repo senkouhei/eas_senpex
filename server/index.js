@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { initWebSocketServer } from './utils/websocket.js';
 import { startAllBots } from './bot/bot_manager.js';
-import settingsService from './services/SettingsService.js';
 // import { getGoogleServiceInstance } from './utils/google.js';
 
 

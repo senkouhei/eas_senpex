@@ -3,13 +3,14 @@ import { insertReply } from '../database/sms_reply.js';
 import twilio from 'twilio';
 const { MessagingResponse } = twilio.twiml;
 import { replyToSMS } from '../utils/openai.js';
+import { logEvent } from '../utils/log.js';
 
 const router = express.Router();
 
 router.post('/reply', async (req, res) => {
   try {
+    logEvent('sms.js', 'INFO', 'Received SMS reply' + JSON.stringify(req));
     const { from, body } = req.body;
-    console.log('Received SMS reply:', from, body);
     const reply = await replyToSMS(body);
     
     const replyObj = {

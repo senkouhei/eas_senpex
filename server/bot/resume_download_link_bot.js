@@ -5,8 +5,8 @@ import { logEvent } from '../utils/log.js';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
-import settingsService from '../services/SettingsService.js';
 import { URL } from 'url';
+import { getSetting } from '../database/settings.js';
 // import puppeteer from 'puppeteer';
 
 const totalCandidators = await getCandidatorsCountWithUrl();
@@ -32,7 +32,7 @@ function broadcast(data) {
 
 
 async function getResumeDownloadLink(url) {
-  const apiKey = settingsService.get('SCRAPERAPI_KEY');
+  const apiKey = await getSetting('SCRAPERAPI_KEY');
   const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
   // Get the sa-final-url header
   const finalUrl = response.headers.get('sa-final-url');

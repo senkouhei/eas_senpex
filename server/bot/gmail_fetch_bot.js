@@ -46,7 +46,7 @@ async function run() {
     if (emails.length > 0) {
       // Batch check for unknown Gmail IDs
       const allIds = emails.map(e => e.id);
-      const unknownIds = await getUnknownGmailIds(allIds);
+      const unknownIds = await getUnknownGmailIds(allIds) || [];
       await logEvent('gmail_fetch_bot.js', 'INFO', 'New emails count: ' + unknownIds.length.toString());
 
       let insertedCount = 0;
@@ -82,6 +82,7 @@ async function run() {
     await logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err);
   }
 }
+
 
 run().then(() => process.exit(0)).catch(err => {
   logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err).catch(console.error);
