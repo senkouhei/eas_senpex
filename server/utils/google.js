@@ -9,9 +9,11 @@ import open from 'open';
 const CREDENTIALS_FILE = process.env.CREDENTIALS_FILE || 'credentials.json';
 const TOKEN_PATH = process.env.GOOGLE_TOKEN_PATH || 'token_google.json';
 const SCOPES = [
-  process.env.GMAIL_SCOPE || 'https://www.googleapis.com/auth/gmail.readonly',
-  process.env.DRIVE_SCOPE || 'https://www.googleapis.com/auth/drive.file',
-  process.env.SHEETS_SCOPE || 'https://www.googleapis.com/auth/spreadsheets',
+  process.env.GMAIL_READONLY_SCOPE  || 'https://www.googleapis.com/auth/gmail.readonly',
+  process.env.GMAIL_MODIFY_SCOPE    || 'https://www.googleapis.com/auth/gmail.modify',
+  process.env.GMAIL_SEND_SCOPE      || 'https://www.googleapis.com/auth/gmail.send',
+  process.env.DRIVE_SCOPE           || 'https://www.googleapis.com/auth/drive.file',
+  process.env.SHEETS_SCOPE          || 'https://www.googleapis.com/auth/spreadsheets',
 ];
 
 const TOKEN_FILES = {
@@ -31,7 +33,6 @@ class GoogleService {
     this.gmailClient = null;
     this.driveClient = null;
     this.sheetsClient = null;
-    this.init();
   }
 
   async ensureToken(tokenPath, oAuth2Client) {
@@ -164,24 +165,30 @@ class GoogleService {
   }
 
   async fetchIndeedEmails(beforeTs = null, afterTs = null) {
-    let query = 'indeed view resume';
-    if (afterTs) query += ` after:${afterTs}`;
-    if (beforeTs) query += ` before:${beforeTs}`;
-    let allMessages = [];
-    let nextPageToken = null;
-    do {
-      const res = await this.gmailClient.users.messages.list({
-        userId: 'me',
-        q: query,
-        maxResults: 10000,
-        pageToken: nextPageToken,
-      });
-      const messages = res.data.messages || [];
-      allMessages = allMessages.concat(messages);
-      nextPageToken = res.data.nextPageToken;
-    } while (nextPageToken);
-    console.log(`Found ${allMessages.length} emails`);
-    return allMessages;
+    try {
+      const botProcessedLabelId = await this.getOrCreateLabel('Bot Processed');
+      let query = '-label:"Bot Processed" Indeed View Resume';
+      if (afterTs) query += ` after:${afterTs}`;
+      if (beforeTs) query += ` before:${beforeTs}`;
+      let allMessages = [];
+      let nextPageToken = null;
+      do {
+        const res = await this.gmailClient.users.messages.list({
+          userId: 'me',
+          q: query,
+          maxResults: 10000,
+          pageToken: nextPageToken,
+        });
+        const messages = res.data.messages || [];
+        allMessages = allMessages.concat(messages);
+        nextPageToken = res.data.nextPageToken;
+      } while (nextPageToken);
+      console.log(`Found ${allMessages.length} emails`);
+      return allMessages;
+    } catch (err) {
+      console.error('Error in fetchIndeedEmails:', err);
+      throw err;
+    }
   }
 
   extractViewResumeLink(html) {
@@ -212,6 +219,25 @@ class GoogleService {
     return res.data.values || [];
   }
 
+  async getOrCreateLabel(labelName) {
+    // List all labels
+    const res = await this.gmailClient.users.labels.list({ userId: 'me' });
+    const labels = res.data.labels;
+    let label = labels.find(l => l.name === labelName);
+    if (label) return label.id;
+
+    // Create label if it doesn't exist
+    const createRes = await this.gmailClient.users.labels.create({
+      userId: 'me',
+      requestBody: {
+        name: labelName,
+        labelListVisibility: 'labelShow',
+        messageListVisibility: 'show',
+      },
+    });
+    return createRes.data.id;
+  }
+
   async getServiceWithToken(serviceName) {
     if (!TOKEN_FILES[serviceName] || !API_VERSIONS[serviceName]) {
       throw new Error(`Unknown service name: ${serviceName}`);
@@ -239,6 +265,24 @@ class GoogleService {
       client = this.sheetsClient;
     }
     return client;
+  }
+
+  async markAsRead(messageId) {
+    try {
+      const labelId = await this.getOrCreateLabel('Bot Processed');
+      await this.gmailClient.users.messages.modify({
+        userId: 'me',
+        id: messageId,
+        requestBody: {
+          removeLabelIds: ['UNREAD'],
+          addLabelIds: [labelId], // 👈 add the label
+        }
+      });
+      console.log(`Message ${messageId} marked as read and labeled 'Bot Processed'`);
+    } catch (err) {
+      console.error('Error in markAsRead:', err);
+      throw err;
+    }
   }
 }
 

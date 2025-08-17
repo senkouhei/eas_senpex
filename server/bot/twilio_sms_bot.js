@@ -8,9 +8,10 @@ const accountSid = settingsService.get('TWILIO_ACCOUNT_SID');
 const authToken = settingsService.get('TWILIO_AUTH_TOKEN');
 const fromNumber = settingsService.get('TWILIO_PHONE_NUMBER');
 const client = twilio(accountSid, authToken);
-const totalCandidators = await getCandidatorsCountWithTwilioSMS();
 import { formatPhoneNumber } from '../utils/phone.js';
+import { logEvent } from '../utils/log.js';
 
+const totalCandidators = await getCandidatorsCountWithTwilioSMS();
 let ws = null;
 function connectWebSocket() {
   ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
@@ -45,13 +46,16 @@ async function run() {
       });
       await setCandidatorSMSStatus(c.gmail_id, 1);
       count++;
-      broadcast({ bot: 'twilio_sms_bot.js', running: true, count: totalCandidators + count });
-      console.log(`SMS sent to ${c.phone_number}`);
+      broadcast({ bot: 'twilio_sms_bot.js', running: true, count: await getCandidatorsCountWithTwilioSMS() });
+      await logEvent('twilio_sms_bot.js', 'SUCCESS', 'SMS sent to ' + c.phone_number);
     } catch (err) {
       await setCandidatorSMSStatus(c.gmail_id, 2);
-      console.error(`Failed to send SMS to ${c.phone_number}:`, err.message);
+      await logEvent('twilio_sms_bot.js', 'ERROR', 'Failed to send SMS to ' + c.phone_number + ':' + err.message);
     }
   }
 }
 
-run();
+run().then(() => process.exit(0)).catch(err => {
+  logEvent('twilio_sms_bot.js', 'ERROR', err.message || err).catch(console.error);
+  process.exit(1);
+});

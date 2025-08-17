@@ -1,8 +1,10 @@
 // gmail_fetch_bot.js
 // Fetches Gmail IDs, sender, timestamp, and resume link from Gmail and saves to Supabase
 import { getGoogleServiceInstance } from '../utils/google.js';
-import { insertCandidator, getUnknownGmailIds, getCountOfAllCandidators } from '../database/candidators.js';
+import { insertCandidator, getUnknownGmailIds, getCountOfAllCandidators, getAllCandidates } from '../database/candidators.js';
 import WebSocket from 'ws';
+import { logEvent } from '../utils/log.js';
+// import { fetchLatestEmails } from '../utils/imap.js';
 
 const totalCandidators = await getCountOfAllCandidators();
 
@@ -31,13 +33,21 @@ async function run() {
     const googleService = getGoogleServiceInstance();
     if (googleService.init) await googleService.init();
 
+    // Mark as read the read emails
+    // const { data: allCandidates, count: allCandidatesCount } = await getAllCandidates();
+    // for (let i = 2; i <= allCandidatesCount / 1000; i ++) {
+    //   const { data: batchCandidates, count: batchCandidatesCount } = await getAllCandidates(i, 1000);
+    //   for (const candidate of batchCandidates) {
+    //     await googleService.markAsRead(candidate.gmail_id);
+    //   }
+    // }
+
     const emails = await googleService.fetchIndeedEmails();
-    console.log('emails count', emails.length);
     if (emails.length > 0) {
       // Batch check for unknown Gmail IDs
       const allIds = emails.map(e => e.id);
       const unknownIds = await getUnknownGmailIds(allIds);
-      
+      await logEvent('gmail_fetch_bot.js', 'INFO', 'New emails count: ' + unknownIds.length.toString());
 
       let insertedCount = 0;
       for (const email of unknownIds) {
@@ -51,19 +61,38 @@ async function run() {
               url: data.resumeLink
             });
             insertedCount++;
-            broadcast({bot: 'gmail_fetch_bot.js', running: true, count: totalCandidators + insertedCount});
-            console.log('insertedCount', insertedCount);
+            await googleService.markAsRead(email);
+            broadcast({bot: 'gmail_fetch_bot.js', running: true, count: await getCountOfAllCandidators()});
+            await logEvent('gmail_fetch_bot.js', 'SUCCESS', 'Inserted resume: ' + data.sender, data.resumeLink);
           } else {
-            console.log("candidate's resume link not found", email);
+            await googleService.markAsRead(email);
+            await logEvent('gmail_fetch_bot.js', 'FAILED', "Resume link not found:" + data.sender, "https://mail.google.com/mail/u/0/#inbox/" + email);
           }
         } catch (err) {
-          console.error(err.message || err);
+          await logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err, "https://www.google.com/inbox/u/0/" + email);
         }
+      }
+
+      const knownIds = allIds.filter(id => !unknownIds.includes(id));
+      for (const email of knownIds) {
+        await googleService.markAsRead(email)
       }
     }
   } catch (err) {
-    console.error(err.message || err);
+    await logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err);
   }
 }
 
-run();
+run().then(() => process.exit(0)).catch(err => {
+  logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err).catch(console.error);
+  process.exit(1);
+});
+
+// for fetch gmails using IMAP
+
+// async function run() {
+//   const emails = await fetchLatestEmails();
+//   console.log('emails', emails.length);
+// }
+
+// run();

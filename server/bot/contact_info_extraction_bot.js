@@ -12,6 +12,7 @@ import { promises as fsp } from 'fs';
 import sharp from 'sharp';
 import { formatPhoneNumber } from '../utils/phone.js';
 import { extractContactInfo } from '../utils/openai.js';
+import { logEvent } from '../utils/log.js';
 
 const totalCandidators = await getCandidatorsCountWithContactInfo();
 
@@ -67,8 +68,6 @@ async function extractTextFromPdf(pdfPath) {
   // save to the output folder
   let index = 0;
   for (const page of document.pages()) {
-    console.log(`${page.number} - rendering...`);
-
     // Render PDF page to PNG image
     const image = await page.render({
       scale: 3, // 3x scale (72 DPI is the default)
@@ -172,7 +171,6 @@ async function run() {
 
       const filename = await getFilenameFromUrl(c.resume_url);
 
-      console.log('downloading file', filename);
       const savedPath = await downloadFile(
         c.resume_url,
         outputDir,
@@ -189,26 +187,29 @@ async function run() {
       } else if (type === 'docx' || type === 'doc') {
         text = await extractTextFromDocx(fileBuffer);
       } else {
-        console.log('Unknown file type, possibly .txt');
+        await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Unknown file type: ' + type);
       }
       const info = await extractContactInfo(text);
       info.phone_number = formatPhoneNumber(info.phone_number);
       await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1});
       count++;
-      broadcast({ bot: 'contact_info_extraction_bot.js', running: true, count: totalCandidators + count });
+      broadcast({ bot: 'contact_info_extraction_bot.js', running: true, count: await getCandidatorsCountWithContactInfo() });
       // Remove the tmp_images directory and its contents
       fs.rmSync(outputDir, { recursive: true, force: true });
-      console.log(`Updated contact info for ${c.gmail_id}`);
+      await logEvent('contact_info_extraction_bot.js', 'SUCCESS', 'Updated contact info for ' + c.gmail_id);
     } catch (err) {
       if (err.status === 404) {
         await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2, is_available: false});
-        console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
+        await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Resume isn\'t longer available: ' + c.gmail_id, c.resume_url);
       } else {
         await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
-        console.error(`Failed to extract contact info for ${c.gmail_id} (${c.resume_url}):`, err.message);
+        await logEvent('contact_info_extraction_bot.js', 'ERROR', 'Failed to extract contact info for ' + c.gmail_id + ' (' + c.resume_url + '):' + err.message);
       }
     }
   }
 }
 
-run();
+run().then(() => process.exit(0)).catch(err => {
+  logEvent('contact_info_extraction_bot.js', 'ERROR', err.message || err).catch(console.error);
+  process.exit(1);
+});

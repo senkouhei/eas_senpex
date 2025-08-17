@@ -5,7 +5,7 @@ import http from 'http';
 import { initWebSocketServer } from './utils/websocket.js';
 import { startAllBots } from './bot/bot_manager.js';
 import settingsService from './services/SettingsService.js';
-import { getGoogleServiceInstance } from './utils/google.js';
+// import { getGoogleServiceInstance } from './utils/google.js';
 
 
 // Routes
@@ -26,7 +26,7 @@ import smsRoutes from './routes/sms.js';
   app.use(express.json());
 
   // Google Service
-  getGoogleServiceInstance();
+  // getGoogleServiceInstance();
 
   app.use('/api/candidators', candidatorRoutes);
   app.use('/api/settings', settingsRoutes);

@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { broadcastBotStatus } from '../utils/websocket.js';
+import { logEvent } from '../utils/log.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,19 +18,23 @@ const bots = [
 
 const processes = {};
 
-export function startBot(bot) {
-  const botPath = path.join(__dirname, bot);
-  const proc = spawn('node', [botPath], { stdio: 'inherit' });
-  processes[bot] = proc;
-  broadcastBotStatus(bot, true);
-  console.log(`[BotManager] Started ${bot} (PID: ${proc.pid})`);
-  proc.on('exit', (code, signal) => {
-    broadcastBotStatus(bot, false);
-    console.log(`[BotManager] ${bot} exited with code ${code} (signal: ${signal}). Restarting...`);
-    setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
-  });
+export async function startBot(bot) {
+  try {
+    const botPath = path.join(__dirname, bot);
+    const proc = spawn('node', [botPath], { stdio: 'inherit' });
+    processes[bot] = proc;
+    broadcastBotStatus(bot, true);
+    await logEvent('bot_manager.js', 'INFO', 'Started ' + bot + ' (PID: ' + proc.pid + ')');
+    proc.on('exit', async (code, signal) => {
+      broadcastBotStatus(bot, false);
+      await logEvent('bot_manager.js', 'INFO', bot + ' exited with code ' + code + ' (signal: ' + signal + '). Restarting...');
+      setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
+    });
+  } catch (err) {
+    await logEvent('bot_manager.js', 'ERROR', err.message || err);
+  }
 }
 
-export function startAllBots() {
-  bots.forEach(startBot);
+export async function startAllBots() {
+  await Promise.all(bots.map(startBot));
 }
