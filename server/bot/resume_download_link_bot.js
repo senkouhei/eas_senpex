@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import settingsService from '../services/SettingsService.js';
 import { URL } from 'url';
-import puppeteer from 'puppeteer';
+// import puppeteer from 'puppeteer';
 
 const totalCandidators = await getCandidatorsCountWithUrl();
 
