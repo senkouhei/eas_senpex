@@ -115,7 +115,7 @@ export async function getCandidatorsCountWithTwilioSMS() {
 }
 
 export async function getCandidatorsToNotify() {
-  const { data, error } = await supabase.from('candidators').select('*').neq('phone_number', null).neq('sms_transferred', 1).order('gmail_timestamp', { ascending: false }).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').neq('phone_number', null).eq('sms_transferred', 0).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
