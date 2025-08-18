@@ -35,14 +35,14 @@ export async function getAllCandidates(page = 1, limit = 1000) {
 
 // getCandidatorsWithoutContactInfo
 export async function getCandidatorsWithoutContactInfo() {
-  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('is_available', true).order('gmail_timestamp', { ascending: false }).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').not('resume_url', 'is', null).is('phone_number', null).is('is_available', true).eq('contact_extracted', 0).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
 
 // getCandidatorsWithoutDownloadLink
 export async function getCandidatorsWithoutUrl() {
-  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).order('gmail_timestamp', { ascending: false }).limit(100000);
+  const { data, error } = await supabase.from('candidators').select('*').is('resume_url', null).is('phone_number', null).not('url', 'is', null).eq('resume_fetched', 0).order('gmail_timestamp', { ascending: false }).limit(100000);
   if (error) throw error;
   return data;
 }
