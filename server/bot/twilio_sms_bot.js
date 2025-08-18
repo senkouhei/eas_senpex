@@ -57,8 +57,6 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
       }
     } catch (err) {
       await logEvent('twilio_sms_bot.js', 'ERROR', err.message || err);
-    } finally {
-      broadcast({ bot: 'twilio_sms_bot.js', running: false});
     }
   }
 

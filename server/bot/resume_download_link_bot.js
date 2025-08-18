@@ -79,8 +79,6 @@ if (await getSetting('resume_download_link_bot.js') === 'ON') {
       }
     } catch (err) {
       await logEvent('resume_download_link_bot.js', 'ERROR', err.message || err);
-    } finally {
-      broadcast({ bot: 'resume_download_link_bot.js', running: false, count: totalCandidators + count });
     }
   }
 

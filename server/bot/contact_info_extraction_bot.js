@@ -211,8 +211,6 @@ if (await getSetting('contact_info_extraction_bot.js') === 'ON') {
       }
     } catch (err) {
       await logEvent('contact_info_extraction_bot.js', 'ERROR', err.message || err);
-    } finally {
-      broadcast({ bot: 'contact_info_extraction_bot.js', running: false });
     }
   }
 
