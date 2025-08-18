@@ -18,10 +18,10 @@ export async function initWebSocketServer(server) {
     console.log('Client connected');
     // Removed ws.on('open') as it's for clients only
     broadcast(botStatuses);
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
-        broadcastBotStatus(data.bot, data.running, data.count);
+        await broadcastBotStatus(data.bot, data.running, data.count);
       } catch (e) {
         console.error('Invalid message:', message);
       }
@@ -46,6 +46,17 @@ export async function initData() {
   }
 }
 
+export async function calculateCandidatorsCount() {
+  const totalCandidators = await getCountOfAllCandidators();
+  const fetchedResumes = await getCandidatorsCountWithUrl();
+  const extractedContacts = await getCandidatorsCountWithContactInfo();
+  const transferredSMS = await getCandidatorsCountWithTwilioSMS();
+  botStatuses['gmail_fetch_bot.js'].count = totalCandidators;
+  botStatuses['resume_download_link_bot.js'].count = fetchedResumes;
+  botStatuses['contact_info_extraction_bot.js'].count = extractedContacts;
+  botStatuses['twilio_sms_bot.js'].count = transferredSMS;
+}
+
 export function broadcast(data) {
   if (!wss) return;
   const msg = JSON.stringify(data);
@@ -56,14 +67,13 @@ export function broadcast(data) {
   });
 }
 
-export function broadcastBotStatus(bot, running, count = 0) {
+export async function broadcastBotStatus(bot, running, count = 0) {
   if (!bot) return;
 
   if (!botStatuses[bot]) botStatuses[bot] = {};
   botStatuses[bot].running = running;
-  if (count !== 0) {
-    botStatuses[bot].count = count;
-  }
+  console.log(bot, running);
+  await calculateCandidatorsCount();
 
   // Ensure 'whole' exists before setting running
   if (!botStatuses["whole"]) botStatuses["whole"] = {};

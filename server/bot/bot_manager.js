@@ -21,20 +21,23 @@ const processes = {};
 
 export async function startBot(bot) {
   try {
+    const botPath = path.join(__dirname, bot);
+    const proc = spawn('node', [botPath], { stdio: 'inherit' });
+    processes[bot] = proc;
     if (await getSetting(bot) === 'ON') {
-      const botPath = path.join(__dirname, bot);
-      const proc = spawn('node', [botPath], { stdio: 'inherit' });
-      processes[bot] = proc;
       broadcastBotStatus(bot, true);
-      await logEvent('bot_manager.js', 'INFO', 'Started ' + bot + ' (PID: ' + proc.pid + ')');
-      proc.on('exit', async (code, signal) => {
-        broadcastBotStatus(bot, false);
-        await logEvent('bot_manager.js', 'INFO', bot + ' exited with code ' + code + ' (signal: ' + signal + '). Restarting...');
-        setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
-      });
-    } else {
-      setTimeout(() => startBot(bot), 1000);
     }
+    proc.on('exit', async (code, signal) => {
+      try {
+        broadcastBotStatus(bot, false);
+        if (code !== 0) {
+          await logEvent('bot_manager.js', 'ERROR', bot + ' exited with code ' + code + ' (signal: ' + signal + '). Restarting...');
+        }
+        setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
+      } catch (err) {
+        await logEvent('bot_manager.js', 'ERROR', err.message || err);
+      }
+    });
   } catch (err) {
     await logEvent('bot_manager.js', 'ERROR', err.message || err);
   }

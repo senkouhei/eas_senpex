@@ -41,9 +41,9 @@ router.put('/bots', async (req, res) => {
       await updateSettingsBulk({ [botKey]: "ON" });
     } else {
       await updateSettingsBulk({ [botKey]: "OFF" });
-      if (botManager.processes[botKey]) {
-        botManager.processes[botKey].kill();
-      }
+      // if (botManager.processes[botKey]) {
+      //   botManager.processes[botKey].kill();
+      // }
     }
     res.json({ success: true });
   } catch (err) {
