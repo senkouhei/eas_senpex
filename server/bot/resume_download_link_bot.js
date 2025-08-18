@@ -57,7 +57,7 @@ if (await getSetting('resume_download_link_bot.js') === 'ON') {
   async function run() {
     let count = 0;
     try {
-      const candidators = await getCandidatorsWithoutUrl();
+      const candidators = await getCandidatorsWithoutUrl() || [];
       for (const candidator of candidators) {
         try {
           if (candidator.url) {

@@ -164,50 +164,55 @@ if (await getSetting('contact_info_extraction_bot.js') === 'ON') {
   }
 
   async function run() {
-    let count = 0;
-    const candidators = await getCandidatorsWithoutContactInfo();
-    for (const c of candidators) {
-      try {
-        const outputDir = path.join(process.cwd(), 'tmp_files');
-        fs.mkdirSync(outputDir, { recursive: true });
-
-        const filename = await getFilenameFromUrl(c.resume_url);
-
-        const savedPath = await downloadFile(
-          c.resume_url,
-          outputDir,
-          filename
-        );
-
-        const type = savedPath.split('.').pop();
-        const fileBuffer = fs.readFileSync(savedPath);
-        let text = '';
-        if (type === 'pdf') {
-          text = await extractTextFromPdf(savedPath);
-        } else if (type === 'txt') {
-          text = await extractTextFromTxt(fileBuffer);
-        } else if (type === 'docx' || type === 'doc') {
-          text = await extractTextFromDocx(fileBuffer);
-        } else {
-          await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Unknown file type: ' + type);
-        }
-        const info = await extractContactInfo(text);
-        info.phone_number = formatPhoneNumber(info.phone_number);
-        await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1});
-        count++;
-        broadcast({ bot: 'contact_info_extraction_bot.js', running: true });
-        // Remove the tmp_images directory and its contents
-        fs.rmSync(outputDir, { recursive: true, force: true });
-        await logEvent('contact_info_extraction_bot.js', 'SUCCESS', 'Updated contact info for ' + c.gmail_id);
-      } catch (err) {
-        if (err.status === 404) {
-          await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2, is_available: false});
-          await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Resume isn\'t longer available: ' + c.gmail_id, c.resume_url);
-        } else {
-          await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
-          await logEvent('contact_info_extraction_bot.js', 'ERROR', 'Failed to extract contact info for ' + c.gmail_id + ' (' + c.resume_url + '):' + err.message);
+    try {
+      
+      const candidators = await getCandidatorsWithoutContactInfo() || [];
+      for (const c of candidators) {
+        try {
+          const outputDir = path.join(process.cwd(), 'tmp_files');
+          fs.mkdirSync(outputDir, { recursive: true });
+  
+          const filename = await getFilenameFromUrl(c.resume_url);
+  
+          const savedPath = await downloadFile(
+            c.resume_url,
+            outputDir,
+            filename
+          );
+  
+          const type = savedPath.split('.').pop();
+          const fileBuffer = fs.readFileSync(savedPath);
+          let text = '';
+          if (type === 'pdf') {
+            text = await extractTextFromPdf(savedPath);
+          } else if (type === 'txt') {
+            text = await extractTextFromTxt(fileBuffer);
+          } else if (type === 'docx' || type === 'doc') {
+            text = await extractTextFromDocx(fileBuffer);
+          } else {
+            await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Unknown file type: ' + type);
+          }
+          const info = await extractContactInfo(text);
+          info.phone_number = formatPhoneNumber(info.phone_number);
+          await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1});
+          broadcast({ bot: 'contact_info_extraction_bot.js', running: true });
+          // Remove the tmp_images directory and its contents
+          fs.rmSync(outputDir, { recursive: true, force: true });
+          await logEvent('contact_info_extraction_bot.js', 'SUCCESS', 'Updated contact info for ' + c.gmail_id);
+        } catch (err) {
+          if (err.status === 404) {
+            await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2, is_available: false});
+            await logEvent('contact_info_extraction_bot.js', 'FAILED', 'Resume isn\'t longer available: ' + c.gmail_id, c.resume_url);
+          } else {
+            await updateCandidatorContactInfo(c.gmail_id, {contact_extracted: 2});
+            await logEvent('contact_info_extraction_bot.js', 'ERROR', 'Failed to extract contact info for ' + c.gmail_id + ' (' + c.resume_url + '):' + err.message);
+          }
         }
       }
+    } catch (err) {
+      await logEvent('contact_info_extraction_bot.js', 'ERROR', err.message || err);
+    } finally {
+      broadcast({ bot: 'contact_info_extraction_bot.js', running: false });
     }
   }
 

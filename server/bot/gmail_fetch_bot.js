@@ -82,6 +82,8 @@ if (await getSetting('gmail_fetch_bot.js') === 'ON') {
       }
     } catch (err) {
       await logEvent('gmail_fetch_bot.js', 'ERROR', err.message || err);
+    } finally {
+      broadcast({ bot: 'gmail_fetch_bot.js', running: false });
     }
   }
 

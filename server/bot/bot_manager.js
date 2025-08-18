@@ -25,15 +25,15 @@ export async function startBot(bot) {
     const proc = spawn('node', [botPath], { stdio: 'inherit' });
     processes[bot] = proc;
     if (await getSetting(bot) === 'ON') {
-      broadcastBotStatus(bot, true);
+      await broadcastBotStatus(bot, true);
     }
     proc.on('exit', async (code, signal) => {
       try {
-        broadcastBotStatus(bot, false);
+        await broadcastBotStatus(bot, false);
         if (code !== 0) {
           await logEvent('bot_manager.js', 'ERROR', bot + ' exited with code ' + code + ' (signal: ' + signal + '). Restarting...');
         }
-        setTimeout(() => startBot(bot), 2000); // Restart after 2 seconds
+        setTimeout(() => startBot(bot), 20000); // Restart after 2 seconds
       } catch (err) {
         await logEvent('bot_manager.js', 'ERROR', err.message || err);
       }
