@@ -10,11 +10,16 @@ import supabase from './supabase.js';
  * @returns {Promise<Object>} - The inserted log or error
  */
 export async function insertLog({ bot, type, content, url = null }) {
-  const { data, error } = await supabase
-    .from('logs')
-    .insert([{ bot, type, content, url }])
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('logs')
+      .insert([{ bot, type, content, url }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Supabase insertLog error:', err);
+    return null;
+  }
 }
