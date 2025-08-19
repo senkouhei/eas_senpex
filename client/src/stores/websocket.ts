@@ -9,7 +9,6 @@ export function useDashboardWebSocket(callback: (msg: any) => void, onClose: () 
   isConnected = true;
 
   ws.onmessage = (event) => {
-    console.log('WebSocket message:', event.data);
     try {
       const msg = JSON.parse(event.data);
       callback(msg);

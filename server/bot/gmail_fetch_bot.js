@@ -1,7 +1,7 @@
 // gmail_fetch_bot.js
 // Fetches Gmail IDs, sender, timestamp, and resume link from Gmail and saves to Supabase
 import { getGoogleServiceInstance } from '../utils/google.js';
-import { insertCandidator, getUnknownGmailIds, getCountOfAllCandidators, getAllCandidates } from '../database/candidators.js';
+import { insertCandidator, getUnknownGmailIds } from '../database/candidators.js';
 import WebSocket from 'ws';
 import { logEvent } from '../utils/log.js';
 import { getSetting } from '../database/settings.js';

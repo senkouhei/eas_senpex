@@ -1,6 +1,6 @@
 // contact_info_extraction_bot.js
 // Extracts contact info from downloaded resume files and updates Supabase
-import { getCandidatorsWithoutContactInfo, updateCandidatorContactInfo, getCandidatorsCountWithContactInfo } from '../database/candidators.js';
+import { getCandidatorsWithoutContactInfo, updateCandidatorContactInfo } from '../database/candidators.js';
 import WebSocket from 'ws';
 import path from 'path';
 import axios from 'axios';

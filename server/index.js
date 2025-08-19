@@ -34,9 +34,6 @@ import smsRoutes from './routes/sms.js';
   app.use('/api/sms', smsRoutes);
 
   // Health check
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
-  });
 
   server.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on port ${PORT}`);

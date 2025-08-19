@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import api from '../api.js'
 
 interface Settings {
   OPENAI_API_KEY: string
@@ -8,9 +8,7 @@ interface Settings {
   TWILIO_PHONE_NUMBER: string
   SCRAPERAPI_KEY: string
 }
-const api = axios.create({
-  baseURL: (import.meta as any).env?.VITE_BACKEND_API_URL || 'http://localhost:5000'
-})
+
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
@@ -37,11 +35,9 @@ export const useSettingsStore = defineStore('settings', {
       
       try {
         const response = await api.get('/api/settings')
-        console.log(response.data)
         this.settings = response.data
       } catch (error) {
         this.error = 'Failed to fetch settings'
-        console.error('Error fetching settings:', error)
       } finally {
         this.loading = false
       }

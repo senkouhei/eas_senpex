@@ -111,7 +111,7 @@ export async function getUnknownGmailIds(gmailIds) {
 // for gmail_fetch_bot
 export async function getCountOfAllCandidators() {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('candidators')
       .select('*', { count: 'exact', head: true })
       .is('is_available', true); // head: true returns no rows, just the count
@@ -126,7 +126,7 @@ export async function getCountOfAllCandidators() {
 // for resume_download_link_bot
 export async function getCandidatorsCountWithUrl() {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('candidators')
       .select('*', { count: 'exact', head: true })
       .or('resume_url.not.is.null,phone_number.not.is.null')
@@ -142,7 +142,7 @@ export async function getCandidatorsCountWithUrl() {
 // for contact_info_extraction_bot
 export async function getCandidatorsCountWithContactInfo() {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('candidators')
       .select('*', { count: 'exact', head: true })
       .neq('phone_number', null);
@@ -157,7 +157,7 @@ export async function getCandidatorsCountWithContactInfo() {
 // for twilio_sms_bot
 export async function getCandidatorsCountWithTwilioSMS() {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('candidators')
       .select('*', { count: 'exact', head: true })
       .eq('sms_transferred', 1);
@@ -182,7 +182,7 @@ export async function getCandidatorsToNotify() {
 
 export async function setCandidatorSMSStatus(gmail_id, transfered, sid, datetime, status, body) {
   try {
-    const { data, error } = await supabase.from('candidators').update({ sms_transferred: transfered, sms_sid: sid, sms_transfered_datetime: datetime || new Date().toISOString(), sms_text: body }).eq('gmail_id', gmail_id);
+    const { data, error } = await supabase.from('candidators').update({ sms_transferred: transfered, sms_sid: sid, sms_transfered_datetime: datetime, sms_text: body, sms_status: status }).eq('gmail_id', gmail_id);
     if (error) throw error;
     return data;
   } catch (err) {
@@ -192,28 +192,59 @@ export async function setCandidatorSMSStatus(gmail_id, transfered, sid, datetime
 }
 
 // for get candidators by status
-export async function getCandidatorsByStatus(status, page, limit, search) {
+export async function getCandidatorsByStatus(status, page, limit, search, sortField, sortOrder, statusFilter, city, state, phone) {
   try {
     // Use coalesce to select name or gmail_name as name
     let query = supabase.from('candidators_with_name').select('*', { count: 'exact' });
+
+    query.is('is_available', true);
+    
     switch (status) {
       case 'fetched':
-        query = query.or('resume_url.not.is.null,phone_number.not.is.null')
+        if (statusFilter === 'success') {
+          query = query.or('resume_url.not.is.null,phone_number.not.is.null');
+        } else if (statusFilter === 'failed') {
+          query = query.eq('resume_fetched', 2);
+        }
         break;
       case 'extracted':
-        query = query.neq('phone_number', null);
+        if (statusFilter === 'success') {
+          query = query.neq('phone_number', null);
+        } else if (statusFilter === 'failed') {
+          query = query.eq('contact_extracted', 2);
+        }
         break;
       case 'transferred':
-        query = query.eq('sms_transferred', 1);
+        if (statusFilter === 'success') {
+          query = query.eq('sms_transferred', 1);
+        } else if (statusFilter === 'failed') {
+          query = query.eq('sms_transferred', 2);
+        }
         break;
       default:
-        // no filter
+        if (statusFilter === 'failed') {
+          query = query.or('sms_transferred.eq.2,contact_extracted.eq.2,resume_fetched.eq.2');
+        }
         break;
     }
     if (search) {
       query = query.ilike('name', `%${search}%`);
     }
-    query = query.order('gmail_timestamp', { ascending: false });
+    if (city) {
+      query = query.ilike('city', `%${city}%`);
+    }
+    if (state) {
+      query = query.ilike('state', `%${state}%`);
+    }
+    if (phone) {
+      query = query.ilike('phone_number', `%${phone}%`);
+    }
+
+    if (sortField && sortOrder) {
+      query = query.order(sortField, { ascending: sortOrder === 'asc' });
+    } else {
+      query = query.order('gmail_timestamp', { ascending: false });
+    }
     query = query.range((page - 1) * limit, page * limit - 1);
     const { data, error, count } = await query;
     if (error) throw error;
@@ -238,11 +269,11 @@ export async function updateCandidatorSMSStatus({phone_number, sid, datetime, st
   }
 }
 
-export async function updateCandidatorSMSStatusBySid(sid, status) {
+export async function updateCandidatorSMSStatusBySid(sid, status, datetime, body) {
   try {
     const { data, error } = await supabase
       .from('candidators')
-      .update({ sms_status: status })
+      .update({ sms_status: status, sms_transfered_datetime: datetime, sms_text: body })
       .eq('sms_sid', sid);
     if (error) throw error;
     return data;
@@ -257,9 +288,10 @@ export async function getCandidatesPedingSMS() {
     const { data, error } = await supabase
       .from('candidators')
       .select('*')
-      .neq('sms_status', 'delivered')
-      .neq('sms_status', 'failed')
-      .neq('sms_sid', null);
+      .or(
+        'and(sms_status.neq.delivered,sms_status.neq.failed,sms_sid.not.is.null),' +
+        'and(sms_status.is.null,sms_sid.not.is.null)'
+      );
     if (error) throw error;
     return data;
   } catch (err) {

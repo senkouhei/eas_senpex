@@ -9,6 +9,14 @@ import { insertLog } from '../database/logs.js';
  * @returns {Promise<Object>} - The inserted log or error
  */
 export async function logEvent(bot, type, content, url = null) {
-  console.log('Logging event:', { bot, type, content, url });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Logging event:', { bot, type, content, url });
+  }
   return await insertLog({ bot, type, content, url });
+}
+
+export function log(...args) {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
 }

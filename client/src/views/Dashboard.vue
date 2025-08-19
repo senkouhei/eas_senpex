@@ -103,11 +103,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDashboardStore } from '../stores/dashboard'
 import { useDashboardWebSocket } from '../stores/websocket'
-import { ArrowPathIcon, UsersIcon, DocumentTextIcon, PhoneIcon, ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline'
+import { UsersIcon, DocumentTextIcon, PhoneIcon, ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const dashboardStore = useDashboardStore()
@@ -157,10 +157,9 @@ const showMenu = ref(false)
 
 onMounted(() => {
   useDashboardWebSocket((msg) => {
-    console.log(msg)
     for (const [key, value] of Object.entries(msg)) {
       if (key === 'whole') {
-        const {running, count} = value as {running: boolean, count: number}
+        const {running} = value as {running: boolean, count: number}
         botStatusMap[key as string] = running
       } else {
         const {running, count} = value as {running: boolean, count: number}
@@ -182,7 +181,6 @@ onMounted(() => {
       }
     }
   }, () => {
-    console.log('WebSocket closed')
     botStatusMap['gmail_fetch_bot.js'] = false
     botStatusMap['resume_download_link_bot.js'] = false
     botStatusMap['contact_info_extraction_bot.js'] = false

@@ -1,5 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { getCountOfAllCandidators, getCandidatorsCountWithContactInfo, getCandidatorsCountWithTwilioSMS, getCandidatorsCountWithUrl } from '../database/candidators.js';
+import { log } from './log.js';
 
 let wss = null;
 let botStatuses = {
@@ -13,9 +14,9 @@ let botStatuses = {
 export async function initWebSocketServer(server) {
   await initData();
   wss = new WebSocketServer({ server, path: '/ws' });
-  console.log("WebSocket server initialized");
+  log("WebSocket server initialized");
   wss.on('connection', (ws) => {
-    console.log('Client connected');
+    log('Client connected');
     // Removed ws.on('open') as it's for clients only
     broadcast(botStatuses);
     ws.on('message', async (message) => {
@@ -27,7 +28,7 @@ export async function initWebSocketServer(server) {
       }
     });
     ws.on('close', () => {
-      console.log('Client disconnected');
+      log('Client disconnected');
     });
   });
 }
@@ -67,12 +68,11 @@ export function broadcast(data) {
   });
 }
 
-export async function broadcastBotStatus(bot, running, count = 0) {
+export async function broadcastBotStatus(bot, running) {
   if (!bot) return;
 
   if (!botStatuses[bot]) botStatuses[bot] = {};
   botStatuses[bot].running = running;
-  console.log(bot, running);
   await calculateCandidatorsCount();
 
   // Ensure 'whole' exists before setting running

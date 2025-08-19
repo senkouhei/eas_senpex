@@ -1,6 +1,6 @@
 // resume_download_link_bot.js
 // Scrapes the download link from the previously saved resume link and updates Supabase
-import { getCandidatorsWithoutUrl, getCandidatorsCountWithUrl, updateCandidatorDownloadLink } from '../database/candidators.js';
+import { getCandidatorsWithoutUrl, updateCandidatorDownloadLink } from '../database/candidators.js';
 import { logEvent } from '../utils/log.js';
 import WebSocket from 'ws';
 import fetch from 'node-fetch';

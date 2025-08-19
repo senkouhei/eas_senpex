@@ -1,6 +1,6 @@
 // twilio_sms_bot.js
 // Sends SMS using Twilio based on extracted contact info
-import { getCandidatorsToNotify, setCandidatorSMSStatus, getCandidatorsCountWithTwilioSMS } from '../database/candidators.js';
+import { getCandidatorsToNotify, setCandidatorSMSStatus } from '../database/candidators.js';
 import twilio from 'twilio';
 import WebSocket from 'ws';
 import { getSetting } from '../database/settings.js';
@@ -10,8 +10,8 @@ const fromNumber = await getSetting('TWILIO_PHONE_NUMBER');
 const client = twilio(accountSid, authToken);
 import { formatPhoneNumber } from '../utils/phone.js';
 import { logEvent } from '../utils/log.js';
-import { updateCandidatorSMSStatus, updateCandidatorSMSStatusBySid, getCandidatesPedingSMS } from '../database/candidators.js';
-import axios from 'axios';
+import { updateCandidatorSMSStatusBySid, getCandidatesPedingSMS } from '../database/candidators.js';
+// import axios from 'axios';
 
 if (await getSetting('twilio_sms_bot.js') === 'ON') {
   await logEvent('twilio_sms_bot.js', 'INFO', 'Started twilio_sms_bot.js');
@@ -35,48 +35,57 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
     ws.send(msg);
   }
 
-  async function fetchAllMessages(pageSize = 20) {
-    let messages = [];
-    let nextPageUrl = null;
-    do {
-      if (!nextPageUrl) {
-        const page = await client.messages.page({
-          from: formatPhoneNumber(fromNumber),
-          pageSize,
-        });
-        nextPageUrl = page.nextPageUrl;
-        messages = messages.concat(page.instances);
-      } else {
-        const response = await axios.get(nextPageUrl, {
-          auth: {
-            username: accountSid,
-            password: authToken
-          }
-        });
-        if (response.data.next_page_uri) {
-          nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
-        } else {
-          nextPageUrl = null;
-        }
-        messages = messages.concat(response.data.messages);
-      }
-    } while (nextPageUrl);
+  // async function fetchAllMessages(pageSize = 20) {
+  //   let messages = [];
+  //   let nextPageUrl = null;
+  //   do {
+  //     if (!nextPageUrl) {
+  //       const page = await client.messages.page({
+  //         from: formatPhoneNumber(fromNumber),
+  //         pageSize,
+  //       });
+  //       nextPageUrl = page.nextPageUrl;
+  //       messages = messages.concat(page.instances);
+  //     } else {
+  //       const response = await axios.get(nextPageUrl, {
+  //         auth: {
+  //           username: accountSid,
+  //           password: authToken
+  //         }
+  //       });
+  //       if (response.data.next_page_uri) {
+  //         nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
+  //       } else {
+  //         nextPageUrl = null;
+  //       }
+  //       messages = messages.concat(response.data.messages);
+  //     }
+  //   } while (nextPageUrl);
   
-    return messages;
+  //   return messages;
+  // }
+  
+  async function fetchMessage(sid) {
+    const message = await client
+      .messages(sid)
+      .fetch();
+  
+    return message;
   }
-  
+
   async function fetchCandidatesStatus() {
     const candidates = await getCandidatesPedingSMS();
-    candidates.forEach(async (c) => {
+    for (const c of candidates) {
       const { sms_sid } = c;
       try {
-        const message = await client.messages(sms_sid).fetch();
-        const { status } = message;
-        await updateCandidatorSMSStatusBySid( sms_sid, status );          
+        const data = await fetchMessage(sms_sid);
+        const { status, dateSent, body } = data;
+        console.log(status, dateSent);
+        await updateCandidatorSMSStatusBySid(sms_sid, status, dateSent || new Date().toISOString(), body);         
       } catch (error) {
         console.error(error);
       }
-    });
+    }
   }
 
   async function run() {
@@ -111,7 +120,7 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
           broadcast({ bot: 'twilio_sms_bot.js', running: true });
           await logEvent('twilio_sms_bot.js', 'SUCCESS', 'SMS sent to ' + c.phone_number);
         } catch (err) {
-          await setCandidatorSMSStatus(c.gmail_id, 2);
+          await setCandidatorSMSStatus(c.gmail_id, 2, null, null, null, null);
           await logEvent('twilio_sms_bot.js', 'ERROR', 'Failed to send SMS to ' + c.phone_number + ':' + err.message);
         }
       }

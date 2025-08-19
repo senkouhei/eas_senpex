@@ -5,6 +5,7 @@ dotenv.config();
 import * as cheerio from 'cheerio';
 import readline from 'readline';
 import open from 'open';
+import { log, logEvent } from './log.js';
 
 const CREDENTIALS_FILE = process.env.CREDENTIALS_FILE || 'credentials.json';
 const TOKEN_PATH = process.env.GOOGLE_TOKEN_PATH || 'token_google.json';
@@ -45,7 +46,7 @@ class GoogleService {
         access_type: 'offline',
         scope: SCOPES,
       });
-      console.log('Authorize this app by visiting this url:', authUrl);
+      log('Authorize this app by visiting this url:', authUrl);
       await open(authUrl);
       const rl = readline.createInterface({
         input: process.stdin,
@@ -58,7 +59,7 @@ class GoogleService {
       const { tokens } = await oAuth2Client.getToken(code);
       oAuth2Client.setCredentials(tokens);
       fs.writeFileSync(tokenPath, JSON.stringify(tokens));
-      console.log('Token stored to', tokenPath);
+      log('Token stored to', tokenPath);
       return tokens;
     } catch (err) {
       console.error(err.message || err);
@@ -166,7 +167,6 @@ class GoogleService {
 
   async fetchIndeedEmails(beforeTs = null, afterTs = null) {
     try {
-      const botProcessedLabelId = await this.getOrCreateLabel('Bot Processed');
       let query = '-label:"Bot Processed" Indeed View Resume';
       if (afterTs) query += ` after:${afterTs}`;
       if (beforeTs) query += ` before:${beforeTs}`;
@@ -183,7 +183,6 @@ class GoogleService {
         allMessages = allMessages.concat(messages);
         nextPageToken = res.data.nextPageToken;
       } while (nextPageToken);
-      console.log(`Found ${allMessages.length} emails`);
       return allMessages;
     } catch (err) {
       console.error('Error in fetchIndeedEmails:', err);
@@ -278,7 +277,7 @@ class GoogleService {
           addLabelIds: [labelId], // 👈 add the label
         }
       });
-      console.log(`Message ${messageId} marked as read and labeled 'Bot Processed'`);
+      await logEvent('gmail_fetch_bot.js', 'INFO', `Message ${messageId} marked as read and labeled 'Bot Processed'`);
     } catch (err) {
       console.error('Error in markAsRead:', err);
       throw err;

@@ -10,8 +10,14 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const search = req.query.search || '';
+    const sortField = req.query.sortField || '';
+    const sortOrder = req.query.sortOrder || '';
+    const statusFilter = req.query.statusFilter || '';
+    const city = req.query.city || '';
+    const state = req.query.state || '';
+    const phone = req.query.phone || '';
     
-    const { data, count } = await getCandidatorsByStatus('', page, limit, search);
+    const { data, count } = await getCandidatorsByStatus('', page, limit, search, sortField, sortOrder, statusFilter, city, state, phone);
 
     res.json({ data, count });
   } catch (err) {
@@ -26,8 +32,14 @@ router.get('/status/:status', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
   const search = req.query.search || '';
+  const sortField = req.query.sortField || '';
+  const sortOrder = req.query.sortOrder || '';
+  const statusFilter = req.query.statusFilter || '';
+  const city = req.query.city || '';
+  const state = req.query.state || '';
+  const phone = req.query.phone || '';
   try {
-    const { data, count } = await getCandidatorsByStatus(status, page, limit, search);
+    const { data, count } = await getCandidatorsByStatus(status, page, limit, search, sortField, sortOrder, statusFilter, city, state, phone);
     
     res.json({ data, count });
   } catch (err) {
@@ -76,6 +88,28 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.put('/tryagain/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from('candidators')
+      .update({
+        resume_fetched: 0,
+        contact_extracted: 0,
+        sms_transferred: 0,
+        sms_status: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('gmail_id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error(err.message || err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // Delete candidator
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

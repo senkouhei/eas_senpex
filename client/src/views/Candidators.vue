@@ -17,21 +17,17 @@
     </transition>
     <!-- Main content -->
     <div class="px-4 py-6 sm:px-0">
-      <div class="sm:flex sm:items-center mb-6">
-        <div class="sm:flex-auto">
-          <h1 class="text-3xl font-bold text-gray-900">Candidates</h1>
-          <p class="mt-2 text-sm text-gray-700">A list of all candidates with their current status.</p>
-        </div>
+      <!-- Responsive filter row: 2 per row on mobile, 4 in one row on desktop -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        <input v-model="search" @input="onSearch" placeholder="Search by name..." class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="cityFilter" @input="onSearch" placeholder="Filter by city" class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="stateFilter" @input="onSearch" placeholder="Filter by state" class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="phoneFilter" @input="onSearch" placeholder="Filter by phone number" class="border rounded px-2 py-2 w-full min-w-[120px]" />
       </div>
 
-      <!-- Search Control (full width) and Page Size Combo Box -->
-      <div class="flex flex-col sm:flex-row sm:items-center mb-4 gap-2">
-        <input v-model="search" @input="onSearch" placeholder="Search by name..." class="border rounded px-2 py-2 w-full" />
-      </div>
-
-      <!-- Progress Filter Buttons -->
-      <div class="mb-6 overflow-x-auto">
-        <nav class="flex space-x-8 min-w-max" aria-label="Tabs" style="-webkit-overflow-scrolling: touch;">
+      <!-- Progress Filter Buttons and Status Toggle in the same row -->
+      <div class="mb-6 overflow-x-auto flex items-center justify-between">
+        <nav class="flex space-x-2 min-w-max w-full" aria-label="Tabs" style="-webkit-overflow-scrolling: touch;">
           <button
             v-for="tab in tabs"
             :key="tab.name"
@@ -40,42 +36,71 @@
               activeTab === tab.key
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-              'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
+              'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex-1'
             ]"
           >
-            {{ tab.name }}
-            <span
-              :class="[
-                activeTab === tab.key ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600',
-                'ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium'
-              ]"
-            >
-              {{ tab.count }}
+            <span class="flex items-center">
+              {{ tab.name }}
+              <span
+                :class="[
+                  activeTab === tab.key ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600',
+                  'ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium'
+                ]"
+              >
+                {{ tab.count }}
+              </span>
+              <!-- Show toggle button to the right of the active tab on mobile -->
+              <span v-if="activeTab === tab.key" class="ml-2 block sm:hidden">
+                <button @click.stop="toggleStatusFilter"
+                  :class="[
+                    'border rounded px-4 py-1 text-sm font-semibold shadow-sm',
+                    statusFilter === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
+                    statusFilter === 'failed' ? 'bg-red-100 text-red-800 border-red-400' :
+                    'bg-white text-gray-800 border-gray-300'
+                  ]">
+                  {{ statusFilter === 'success' ? 'Show Success' : statusFilter === 'failed' ? 'Show Failed' : 'Show All' }}
+                </button>
+              </span>
             </span>
           </button>
         </nav>
+        <!-- On desktop, show toggle at far right -->
+        <div class="ml-4 hidden sm:block">
+          <button @click="toggleStatusFilter"
+            :class="[
+              'border rounded px-4 py-1 text-sm font-semibold shadow-sm',
+              statusFilter === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
+              statusFilter === 'failed' ? 'bg-red-100 text-red-800 border-red-400' :
+              'bg-white text-gray-800 border-gray-300'
+            ]">
+            {{ statusFilter === 'success' ? 'Show Success' : statusFilter === 'failed' ? 'Show Failed' : 'Show All' }}
+          </button>
+        </div>
       </div>
 
       <!-- Candidators Table -->
       <div class="bg-white shadow overflow-hidden sm:rounded-md">
-        <div v-if="candidatorsStore.loading" class="p-8 text-center">
-          <div class="animate-pulse">Loading candidates...</div>
-        </div>
-        
-        <div v-else-if="candidatorsStore.error" class="p-8 text-center text-red-600">
-          {{ candidatorsStore.error }}
-        </div>
-        
-        <div v-else-if="!Array.isArray(candidatorsStore.candidators) || candidatorsStore.candidators.length === 0" class="p-8 text-center text-gray-500">
-          No candidates found.
-        </div>
-        
-        <div v-else class="overflow-x-auto">
+        <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky-col sticky-col-left bg-gray-50 z-10">
-                  Name
+                  <div class="flex items-center">
+                    Name
+                    <div class="ml-2 relative">
+                      <button @click="toggleSort('name')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                        <span v-if="sortField === 'name' && sortOrder === 'asc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
+                        </span>
+                        <span v-else-if="sortField === 'name' && sortOrder === 'dsc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5 5 5-5"/></svg>
+                        </span>
+                        <span v-else>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
@@ -84,7 +109,76 @@
                   Phone Number
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
+                  <div class="flex items-center">
+                    City
+                    <div class="ml-2 relative">
+                      <button @click="toggleSort('city')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                        <span v-if="sortField === 'city' && sortOrder === 'asc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
+                        </span>
+                        <span v-else-if="sortField === 'city' && sortOrder === 'dsc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5 5 5-5"/></svg>
+                        </span>
+                        <span v-else>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    State
+                    <div class="ml-2 relative">
+                      <button @click="toggleSort('state')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                        <span v-if="sortField === 'state' && sortOrder === 'asc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
+                        </span>
+                        <span v-else-if="sortField === 'state' && sortOrder === 'dsc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5 5 5-5"/></svg>
+                        </span>
+                        <span v-else>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    Gmail Timestamp
+                    <div class="ml-2 relative">
+                      <button @click="toggleSort('gmail_timestamp')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                        <span v-if="sortField === 'gmail_timestamp' && sortOrder === 'asc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
+                        </span>
+                        <span v-else-if="sortField === 'gmail_timestamp' && sortOrder === 'dsc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5 5 5-5"/></svg>
+                        </span>
+                        <span v-else>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    SMS Timestamp
+                    <div class="ml-2 relative">
+                      <button @click="toggleSort('sms_transfered_datetime')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                        <span v-if="sortField === 'sms_transfered_datetime' && sortOrder === 'asc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
+                        </span>
+                        <span v-else-if="sortField === 'sms_transfered_datetime' && sortOrder === 'dsc'">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5 5 5-5"/></svg>
+                        </span>
+                        <span v-else>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8l5-5 5 5M5 12l5 5 5-5"/></svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   URL
@@ -98,7 +192,22 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="candidator in (Array.isArray(candidatorsStore.candidators) ? candidatorsStore.candidators : [])" :key="candidator.id">
+              <tr v-if="candidatorsStore.loading">
+                <td :colspan="12" class="p-8 text-center">
+                  <div class="animate-pulse">Loading candidates...</div>
+                </td>
+              </tr>
+              <tr v-else-if="candidatorsStore.error">
+                <td :colspan="12" class="p-8 text-center text-red-600">
+                  {{ candidatorsStore.error }}
+                </td>
+              </tr>
+              <tr v-else-if="!Array.isArray(candidatorsStore.candidators) || candidatorsStore.candidators.length === 0">
+                <td :colspan="12" class="p-8 text-center text-gray-500">
+                  No candidates found.
+                </td>
+              </tr>
+              <tr v-else v-for="candidator in (Array.isArray(candidatorsStore.candidators) ? candidatorsStore.candidators : [])" :key="candidator.id">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky-col sticky-col-left bg-white z-10">
                   {{ candidator.name_display }}
                 </td>
@@ -109,7 +218,16 @@
                   {{ candidator.phone_number }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ candidator.city }}, {{ candidator.state }}
+                  {{ candidator.city }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ candidator.state }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatDate(candidator.gmail_timestamp) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatDate(candidator.sms_transfered_datetime) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <a :href="candidator.url" target="_blank" class="text-blue-600 hover:text-blue-900">
@@ -144,6 +262,13 @@
                     </span>
                   </div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  <button @click="tryAgain(candidator)" class="border rounded px-2 py-1 text-xs font-semibold bg-white shadow-sm">
+                    <template v-if="candidator.resume_fetched === 2 || candidator.contact_extracted === 2 || candidator.sms_transferred === 2">
+                      Try again
+                    </template>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -171,6 +296,7 @@ import { useRoute } from 'vue-router'
 import { useCandidatorsStore } from '../stores/candidators'
 import { useDashboardStore } from '../stores/dashboard'
 import { useDashboardWebSocket } from '../stores/websocket'
+import api from '../api'
 
 const route = useRoute()
 const candidatorsStore = useCandidatorsStore()
@@ -184,14 +310,66 @@ const search = ref('')
 
 const showMenu = ref(false)
 
-const fetchPaginated = async () => {
-  await candidatorsStore.fetchPaginated({ status: activeTab.value, page: page.value, limit: limit.value, search: search.value })
-}
+const sortField = ref('')
+const sortOrder = ref<'asc' | 'dsc' | ''>('')
 
-const onSearch = () => {
-  page.value = 1
+const cityFilter = ref('')
+const stateFilter = ref('')
+const phoneFilter = ref('')
+
+const statusFilter = ref('') // '', 'success', 'failed'
+const toggleStatusFilter = () => {
+  if (statusFilter.value === '') statusFilter.value = 'success'
+  else if (statusFilter.value === 'success') statusFilter.value = 'failed'
+  else statusFilter.value = ''
   fetchPaginated()
 }
+
+const toggleSort = (field: string) => {
+  if (sortField.value !== field) {
+    sortField.value = field
+    sortOrder.value = 'asc'
+  } else if (sortOrder.value === 'asc') {
+    sortOrder.value = 'dsc'
+  } else if (sortOrder.value === 'dsc') {
+    sortField.value = ''
+    sortOrder.value = ''
+  } else {
+    sortOrder.value = 'asc'
+  }
+  // Save to store and refetch
+  candidatorsStore.setSort(sortField.value, sortOrder.value)
+  fetchPaginated()
+}
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleString()
+}
+
+const fetchPaginated = async () => {
+  await candidatorsStore.fetchPaginated({
+    status: activeTab.value,
+    page: page.value,
+    limit: limit.value,
+    search: search.value,
+    city: cityFilter.value,
+    state: stateFilter.value,
+    phone: phoneFilter.value,
+    statusFilter: statusFilter.value
+  })
+}
+
+let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+const onSearch = () => {
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    page.value = 1;
+    fetchPaginated();
+  }, 500);
+};
 const prevPage = () => {
   if (page.value > 1) {
     page.value--
@@ -231,12 +409,28 @@ const getSMSStatusClass = (status: string) => {
       return 'bg-blue-100 text-blue-800'
     case 'delivered':
       return 'bg-green-100 text-green-800'
+    case 'undelivered':
+      return 'bg-yellow-100 text-yellow-800'
     case 'failed':
       return 'bg-red-100 text-red-800'
     default:
       return 'bg-gray-100 text-gray-800'
   }
 }
+
+const tryAgain = async (candidator: any) => {
+  try {
+    const id = candidator.gmail_id || candidator.id;
+    await api.put(`/api/candidators/tryagain/${id}`).then(() => {
+      fetchPaginated();
+    }).catch((err) => {
+      console.error('Retry failed:', err);
+    });
+    fetchPaginated();
+  } catch (err) {
+    console.error('Retry failed:', err);
+  }
+};
 
 // Watch for route query changes
 watch(() => route.query.filter, (filter) => {
@@ -249,12 +443,10 @@ watch(() => route.query.filter, (filter) => {
 onMounted(async () => {
   // await dashboardStore.fetchStats()
   useDashboardWebSocket((msg) => {
-    console.log(msg)
     for (const [key, value] of Object.entries(msg)) {
       if (key === 'whole') {
-        const {running, count} = value as {running: boolean, count: number}
       } else {
-        const {running, count} = value as {running: boolean, count: number}
+        const {count} = value as {count: number}
         switch(key) {
           case 'gmail_fetch_bot.js':
             dashboardStore.stats.totalCandidators = count

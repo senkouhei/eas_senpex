@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { log } from '../utils/log.js';
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ class SupabaseClient {
         process.env.SUPABASE_SERVICE_KEY
       );
       SupabaseClient.instance = this;
-      console.log('SupabaseClient initialized');
+      log('SupabaseClient initialized');
     }
     return SupabaseClient.instance;
   }
