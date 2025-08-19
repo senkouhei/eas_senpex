@@ -198,24 +198,25 @@ export async function getCandidatorsByStatus(status, page, limit, search, sortFi
     let query = supabase.from('candidators_with_name').select('*', { count: 'exact' });
 
     query.is('is_available', true);
-    
+    console.log(statusFilter);
+    if (!statusFilter) statusFilter = '';
     switch (status) {
       case 'fetched':
-        if (statusFilter === '' && statusFilter === 'success') {
+        if (statusFilter === '' || statusFilter === 'success') {
           query = query.or('resume_url.not.is.null,phone_number.not.is.null');
         } else if (statusFilter === 'failed') {
           query = query.eq('resume_fetched', 2);
         }
         break;
       case 'extracted':
-        if (statusFilter === '' && statusFilter === 'success') {
+        if (statusFilter === '' || statusFilter === 'success') {
           query = query.neq('phone_number', null);
         } else if (statusFilter === 'failed') {
           query = query.eq('contact_extracted', 2);
         }
         break;
       case 'transferred':
-        if (statusFilter === '' && statusFilter === 'success') {
+        if (statusFilter === '' || statusFilter === 'success') {
           query = query.eq('sms_transferred', 1);
         } else if (statusFilter === 'failed') {
           query = query.eq('sms_transferred', 2);
