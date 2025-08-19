@@ -198,7 +198,6 @@ export async function getCandidatorsByStatus(status, page, limit, search, sortFi
     let query = supabase.from('candidators_with_name').select('*', { count: 'exact' });
 
     query.is('is_available', true);
-    console.log(statusFilter);
     if (!statusFilter) statusFilter = '';
     switch (status) {
       case 'fetched':

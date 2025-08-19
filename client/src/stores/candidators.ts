@@ -78,7 +78,29 @@ export const useCandidatorsStore = defineStore('candidators', {
       }
     },
 
-    async fetchPaginated({ status = 'all', page = 1, limit = 20, search = '', city = '', state = '', phone = '', statusFilter = '' }: { status: string, page: number, limit: number, search: string, city: string, state: string, phone: string, statusFilter: string }) {
+    async fetchPaginated({
+      status = 'all',
+      page = 1,
+      limit = 20,
+      search = '',
+      city = '',
+      state = '',
+      phone = '',
+      statusFilter = '',
+      sortField = '',
+      sortOrder = ''
+    }: {
+      status: string,
+      page: number,
+      limit: number,
+      search: string,
+      city: string,
+      state: string,
+      phone: string,
+      statusFilter: string,
+      sortField: string,
+      sortOrder: string
+    }) {
       this.loading = true
       this.error = null
       try {
@@ -87,9 +109,9 @@ export const useCandidatorsStore = defineStore('candidators', {
           url = `/api/candidators/status/${status}`
         }
         const params: any = { page, limit, search }
-        if (this.sortField && this.sortOrder) {
-          params.sortField = this.sortField
-          params.sortOrder = this.sortOrder
+        if (sortField && sortOrder) {
+          params.sortField = sortField
+          params.sortOrder = sortOrder
         }
         if (city) params.city = city
         if (state) params.state = state

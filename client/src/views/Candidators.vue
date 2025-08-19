@@ -19,10 +19,10 @@
     <div class="px-4 py-6 sm:px-0">
       <!-- Responsive filter row: 2 per row on mobile, 4 in one row on desktop -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        <input v-model="search" @input="onSearch" placeholder="Search by name..." class="border rounded px-2 py-2 w-full min-w-[120px]" />
-        <input v-model="cityFilter" @input="onSearch" placeholder="Filter by city" class="border rounded px-2 py-2 w-full min-w-[120px]" />
-        <input v-model="stateFilter" @input="onSearch" placeholder="Filter by state" class="border rounded px-2 py-2 w-full min-w-[120px]" />
-        <input v-model="phoneFilter" @input="onSearch" placeholder="Filter by phone number" class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="search" @change="onSearchChange" placeholder="Search by name..." class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="cityFilter" @change="onCityChange" placeholder="Filter by city" class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="stateFilter" @change="onStateChange" placeholder="Filter by state" class="border rounded px-2 py-2 w-full min-w-[120px]" />
+        <input v-model="phoneFilter" @change="onPhoneChange" placeholder="Filter by phone number" class="border rounded px-2 py-2 w-full min-w-[120px]" />
       </div>
 
       <!-- Progress Filter Buttons and Status Toggle in the same row -->
@@ -51,7 +51,7 @@
               </span>
               <!-- Show toggle button to the right of the active tab on mobile -->
               <span v-if="activeTab === tab.key" class="ml-2 block sm:hidden">
-                <button @click.stop="toggleStatusFilter"
+                <button @click.stop="onStatusFilterChange(statusFilter === '' ? 'success' : statusFilter === 'success' ? 'failed' : '')"
                   :class="[
                     'border rounded px-4 py-1 text-sm font-semibold shadow-sm',
                     statusFilter === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
@@ -66,7 +66,7 @@
         </nav>
         <!-- On desktop, show toggle at far right -->
         <div class="ml-4 hidden sm:block">
-          <button @click="toggleStatusFilter"
+          <button @click="onStatusFilterChange(statusFilter === '' ? 'success' : statusFilter === 'success' ? 'failed' : '')"
             :class="[
               'border rounded px-4 py-1 text-sm font-semibold shadow-sm',
               statusFilter === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
@@ -88,7 +88,7 @@
                   <div class="flex items-center">
                     Name
                     <div class="ml-2 relative">
-                      <button @click="toggleSort('name')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                      <button @click="onSortChange('name')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
                         <span v-if="sortField === 'name' && sortOrder === 'asc'">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
                         </span>
@@ -112,7 +112,7 @@
                   <div class="flex items-center">
                     City
                     <div class="ml-2 relative">
-                      <button @click="toggleSort('city')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                      <button @click="onSortChange('city')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
                         <span v-if="sortField === 'city' && sortOrder === 'asc'">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
                         </span>
@@ -130,7 +130,7 @@
                   <div class="flex items-center">
                     State
                     <div class="ml-2 relative">
-                      <button @click="toggleSort('state')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                      <button @click="onSortChange('state')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
                         <span v-if="sortField === 'state' && sortOrder === 'asc'">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
                         </span>
@@ -148,7 +148,7 @@
                   <div class="flex items-center">
                     Gmail Timestamp
                     <div class="ml-2 relative">
-                      <button @click="toggleSort('gmail_timestamp')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                      <button @click="onSortChange('gmail_timestamp')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
                         <span v-if="sortField === 'gmail_timestamp' && sortOrder === 'asc'">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
                         </span>
@@ -166,7 +166,7 @@
                   <div class="flex items-center">
                     SMS Timestamp
                     <div class="ml-2 relative">
-                      <button @click="toggleSort('sms_transfered_datetime')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
+                      <button @click="onSortChange('sms_transfered_datetime')" class="text-xs border rounded px-1 py-0.5 bg-white flex items-center">
                         <span v-if="sortField === 'sms_transfered_datetime' && sortOrder === 'asc'">
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 5 5"/></svg>
                         </span>
@@ -281,9 +281,9 @@
             <option v-for="size in [10, 20, 50, 100]" :key="size" :value="size">{{ size }}</option>
           </select>
         </div>
-        <button @click="prevPage" :disabled="page === 1" class="px-2 py-1 border rounded disabled:opacity-50">Prev</button>
+        <button @click="onPageChange(page - 1)" :disabled="page === 1" class="px-2 py-1 border rounded disabled:opacity-50">Prev</button>
         <span class="mx-2">Page {{ page }}</span>
-        <button @click="nextPage" :disabled="page * limit >= candidatorsStore.totalCount" class="px-2 py-1 border rounded disabled:opacity-50">Next</button>
+        <button @click="onPageChange(page + 1)" :disabled="page * limit >= candidatorsStore.totalCount" class="px-2 py-1 border rounded disabled:opacity-50">Next</button>
         <span class="ml-4 text-sm text-gray-500">Total: {{ candidatorsStore.totalCount }}</span>
       </div>
     </div>
@@ -292,64 +292,97 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useCandidatorsStore } from '../stores/candidators'
 import { useDashboardStore } from '../stores/dashboard'
 import { useDashboardWebSocket } from '../stores/websocket'
 import api from '../api'
 
 const route = useRoute()
+const router = useRouter()
 const candidatorsStore = useCandidatorsStore()
 const dashboardStore = useDashboardStore()
 
-const activeTab = ref('all')
-
-const page = ref(1)
-const limit = ref(20)
-const search = ref('')
-
 const showMenu = ref(false)
 
-const sortField = ref('')
-const sortOrder = ref<'asc' | 'dsc' | ''>('')
+const activeTab = ref('all')
 
-const cityFilter = ref('')
-const stateFilter = ref('')
-const phoneFilter = ref('')
+const page = ref(Number(route.query.page) || 1)
+const limit = ref(Number(route.query.limit) || 20)
+const search = ref(getQueryString(route.query.name))
+const cityFilter = ref(getQueryString(route.query.city))
+const stateFilter = ref(getQueryString(route.query.state))
+const phoneFilter = ref(getQueryString(route.query.phone))
+const sortField = ref(getQueryString(route.query.sortField))
+const sortOrder = ref(getQueryString(route.query.sortOrder))
+const statusFilter = ref(getQueryString(route.query.statusFilter))
 
-const statusFilter = ref('') // '', 'success', 'failed'
-const toggleStatusFilter = () => {
-  if (statusFilter.value === '') statusFilter.value = 'success'
-  else if (statusFilter.value === 'success') statusFilter.value = 'failed'
-  else statusFilter.value = ''
-  fetchPaginated()
+function updateQuery(params: Record<string, any>) {
+  router.replace({ query: { ...route.query, ...params } })
 }
 
-const toggleSort = (field: string) => {
-  if (sortField.value !== field) {
+function getQueryString(value: any): string {
+  return value !== null && value !== undefined ? String(value) : '';
+}
+
+function onSearchChange() {
+  updateQuery({ name: search.value, page: 1 })
+}
+function onCityChange() {
+  updateQuery({ city: cityFilter.value, page: 1 })
+}
+function onStateChange() {
+  updateQuery({ state: stateFilter.value, page: 1 })
+}
+function onPhoneChange() {
+  updateQuery({ phone: phoneFilter.value, page: 1 })
+}
+function onSortChange(field: string) {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'dsc' : sortOrder.value === 'dsc' ? '' : 'asc'
+  } else {
     sortField.value = field
     sortOrder.value = 'asc'
-  } else if (sortOrder.value === 'asc') {
-    sortOrder.value = 'dsc'
-  } else if (sortOrder.value === 'dsc') {
-    sortField.value = ''
-    sortOrder.value = ''
-  } else {
-    sortOrder.value = 'asc'
   }
-  // Save to store and refetch
-  candidatorsStore.setSort(sortField.value, sortOrder.value)
-  fetchPaginated()
+  updateQuery({ sortField: sortField.value, sortOrder: sortOrder.value, page: 1 })
+}
+function onStatusFilterChange(newStatus: string) {
+  statusFilter.value = newStatus
+  updateQuery({ statusFilter: newStatus, page: 1 })
+}
+function onPageChange(newPage: number) {
+  updateQuery({ page: newPage })
+}
+function onPageSizeChange(event: Event) {
+  const newLimit = Number((event.target as HTMLSelectElement).value);
+  updateQuery({ limit: newLimit, page: 1 });
 }
 
-function formatDate(dateStr: string) {
+const formatDate = (dateStr: string) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleString()
 }
 
-const fetchPaginated = async () => {
+watch(
+  () => route.query,
+  (query) => {
+    page.value = Number(query.page) || 1
+    limit.value = Number(query.limit) || 20
+    search.value = getQueryString(query.name)
+    cityFilter.value = getQueryString(query.city)
+    stateFilter.value = getQueryString(query.state)
+    phoneFilter.value = getQueryString(query.phone)
+    sortField.value = getQueryString(query.sortField)
+    sortOrder.value = getQueryString(query.sortOrder)
+    statusFilter.value = getQueryString(query.statusFilter)
+    fetchPaginated()
+  },
+  { immediate: true }
+)
+
+async function fetchPaginated() {
   await candidatorsStore.fetchPaginated({
     status: activeTab.value,
     page: page.value,
@@ -358,37 +391,11 @@ const fetchPaginated = async () => {
     city: cityFilter.value,
     state: stateFilter.value,
     phone: phoneFilter.value,
+    sortField: sortField.value,
+    sortOrder: sortOrder.value,
     statusFilter: statusFilter.value
   })
 }
-
-let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-const onSearch = () => {
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    page.value = 1;
-    fetchPaginated();
-  }, 500);
-};
-const prevPage = () => {
-  if (page.value > 1) {
-    page.value--
-    fetchPaginated()
-  }
-}
-const nextPage = () => {
-  if (page.value * limit.value < candidatorsStore.totalCount) {
-    page.value++
-    fetchPaginated()
-  }
-}
-
-const onPageSizeChange = () => {
-  page.value = 1;
-  fetchPaginated();
-};
-
-watch([page, limit], fetchPaginated, { immediate: true })
 
 const tabs = computed(() => [
   { name: 'All Candidators', key: 'all', count: dashboardStore.stats.totalCandidators },
@@ -400,7 +407,7 @@ const tabs = computed(() => [
 const setActiveTab = (tab: string) => {
   activeTab.value = tab
   page.value = 1;
-  fetchPaginated()
+  updateQuery({ status: tab, page: 1 })
 }
 
 const getSMSStatusClass = (status: string) => {
@@ -473,6 +480,10 @@ onMounted(async () => {
     setActiveTab(filter)
   } else {
     // candidatorsStore.fetchCandidators()
+  }
+  // If no sortField/sortOrder in query, set default to gmail_timestamp desc
+  if (!route.query.sortField || !route.query.sortOrder) {
+    updateQuery({ sortField: 'gmail_timestamp', sortOrder: 'dsc' })
   }
 })
 </script>
