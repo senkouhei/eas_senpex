@@ -132,7 +132,7 @@ const barOptions = {
   plugins: {
     legend: { display: false },
     datalabels: {
-      anchor: 'start' as const,
+      anchor: 'end' as const,
       align: 'center' as const,
       color: '#333',
       font: { weight: 'bold' as const },
@@ -160,7 +160,7 @@ const barOptionsByState = {
   plugins: {
     legend: { display: false },
     datalabels: {
-      anchor: 'start' as const,
+      anchor: 'end' as const,
       align: 'center' as const,
       color: '#333',
       font: { weight: 'bold' as const },
