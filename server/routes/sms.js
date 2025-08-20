@@ -9,7 +9,16 @@ const router = express.Router();
 
 router.post('/reply', async (req, res) => {
   try {
-    logEvent('sms.js', 'INFO', 'Received SMS reply' + JSON.stringify(req));
+    const reqSummary = {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      body: req.body,
+      query: req.query,
+      params: req.params
+    };
+    console.log(JSON.stringify(reqSummary));
+    logEvent('sms.js', 'INFO', 'Received SMS reply' + JSON.stringify(reqSummary));
     const { from, body } = req.body;
     const reply = await replyToSMS(body);
     
