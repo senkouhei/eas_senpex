@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import Candidators from '../views/Candidators.vue'
 import Settings from '../views/Settings.vue'
+import Analytics from '../views/Analytics.vue'
 
 const routes = [
   {
@@ -22,6 +23,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path: '/analytics',
+    name: 'Analytics',
+    component: Analytics
   }
 ]
 

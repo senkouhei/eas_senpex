@@ -13,6 +13,7 @@ import settingsRoutes from './routes/settings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import authRoutes from './routes/auth.js';
 import smsRoutes from './routes/sms.js';
+import analyticsRoutes from './routes/analytics.js';
 
 (async () => {
   dotenv.config();
@@ -32,6 +33,7 @@ import smsRoutes from './routes/sms.js';
   app.use('/api/dashboard', dashboardRoutes); 
   app.use('/api/auth', authRoutes);
   app.use('/api/sms', smsRoutes);
+  app.use('/api/analytics', analyticsRoutes);
 
   // Health check
 

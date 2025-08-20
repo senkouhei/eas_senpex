@@ -10,8 +10,8 @@ const fromNumber = await getSetting('TWILIO_PHONE_NUMBER');
 const client = twilio(accountSid, authToken);
 import { formatPhoneNumber } from '../utils/phone.js';
 import { logEvent } from '../utils/log.js';
-import { updateCandidatorSMSStatusBySid, getCandidatesPedingSMS } from '../database/candidators.js';
-// import axios from 'axios';
+import { updateCandidatorSMSStatus, updateCandidatorSMSStatusBySid, getCandidatesPedingSMS } from '../database/candidators.js';
+import axios from 'axios';
 
 if (await getSetting('twilio_sms_bot.js') === 'ON') {
   await logEvent('twilio_sms_bot.js', 'INFO', 'Started twilio_sms_bot.js');
@@ -35,35 +35,35 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
     ws.send(msg);
   }
 
-  // async function fetchAllMessages(pageSize = 20) {
-  //   let messages = [];
-  //   let nextPageUrl = null;
-  //   do {
-  //     if (!nextPageUrl) {
-  //       const page = await client.messages.page({
-  //         from: formatPhoneNumber(fromNumber),
-  //         pageSize,
-  //       });
-  //       nextPageUrl = page.nextPageUrl;
-  //       messages = messages.concat(page.instances);
-  //     } else {
-  //       const response = await axios.get(nextPageUrl, {
-  //         auth: {
-  //           username: accountSid,
-  //           password: authToken
-  //         }
-  //       });
-  //       if (response.data.next_page_uri) {
-  //         nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
-  //       } else {
-  //         nextPageUrl = null;
-  //       }
-  //       messages = messages.concat(response.data.messages);
-  //     }
-  //   } while (nextPageUrl);
+  async function fetchAllMessages(pageSize = 20) {
+    let messages = [];
+    let nextPageUrl = null;
+    do {
+      if (!nextPageUrl) {
+        const page = await client.messages.page({
+          from: formatPhoneNumber(fromNumber),
+          pageSize,
+        });
+        nextPageUrl = page.nextPageUrl;
+        messages = messages.concat(page.instances);
+      } else {
+        const response = await axios.get(nextPageUrl, {
+          auth: {
+            username: accountSid,
+            password: authToken
+          }
+        });
+        if (response.data.next_page_uri) {
+          nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
+        } else {
+          nextPageUrl = null;
+        }
+        messages = messages.concat(response.data.messages);
+      }
+    } while (nextPageUrl);
   
-  //   return messages;
-  // }
+    return messages;
+  }
   
   async function fetchMessage(sid) {
     const message = await client
@@ -89,15 +89,20 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
   }
 
   async function run() {
-    // const messages = await fetchAllMessages(1000)
-    // messages.forEach(async (m) => {
+    // const messages = await fetchAllMessages(1000);
+    // for (const m of messages) {
     //   const { sid, status, to, dateSent, body } = m;
-    //   try {
-    //     await updateCandidatorSMSStatus({ phone_number: to, sid, datetime: dateSent || new Date().toISOString(), status, body });          
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // });
+    //   let error = null;
+    //   do {
+    //     try {
+    //       await updateCandidatorSMSStatus({ phone_number: to, sid, datetime: dateSent || new Date().toISOString(), status, body });          
+    //     } catch (err) {
+    //       console.error(err);
+    //       error = err;
+    //       await new Promise(resolve => setTimeout(resolve, 3000));
+    //     }
+    //   } while (error);
+    // }
     try {
       await fetchCandidatesStatus();
     } catch (err) {

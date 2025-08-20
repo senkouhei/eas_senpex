@@ -14,6 +14,7 @@ import { formatPhoneNumber } from '../utils/phone.js';
 import { extractContactInfo } from '../utils/openai.js';
 import { logEvent } from '../utils/log.js';
 import { getSetting } from '../database/settings.js';
+import usStates from "us-state-codes";
 
 if (await getSetting('contact_info_extraction_bot.js') === 'ON') {
 
@@ -194,7 +195,12 @@ if (await getSetting('contact_info_extraction_bot.js') === 'ON') {
           }
           const info = await extractContactInfo(text);
           info.phone_number = formatPhoneNumber(info.phone_number);
-          await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1});
+          let stateCode = usStates.getStateCodeByStateName(info.state);
+          if (!stateCode) {
+            stateCode = info.state || null;
+          }
+          logEvent('contact_info_extraction_bot.js', 'INFO', 'State code: ' + stateCode + ' for ' + info.state);
+          await updateCandidatorContactInfo(c.gmail_id, {...info, contact_extracted: 1, state: stateCode});
           broadcast({ bot: 'contact_info_extraction_bot.js', running: true });
           // Remove the tmp_images directory and its contents
           fs.rmSync(outputDir, { recursive: true, force: true });
