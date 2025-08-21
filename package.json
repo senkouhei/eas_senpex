@@ -13,7 +13,8 @@
     "install-client": "cd client && npm install",
     "install-server": "npm install",
     "postinstall": "npm run install-client",
-    "render": "npm run build && npm run deploy"
+    "render": "npm run build && npm run deploy",
+    "start-bots": "node server/bot/bot_manager.js"
   },
   "dependencies": {
     "@hyzyla/pdfium": "^2.1.9",

@@ -1,6 +1,5 @@
 import express from 'express';
 import { getAllSettings, updateSettingsBulk } from '../database/settings.js';
-import * as botManager from '../bot/bot_manager.js';
 
 const router = express.Router();
 

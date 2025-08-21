@@ -4,8 +4,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 import { initWebSocketServer } from './utils/websocket.js';
-import { startAllBots } from './bot/bot_manager.js';
-// import { getGoogleServiceInstance } from './utils/google.js';
 
 
 // Routes
@@ -44,7 +42,6 @@ import analyticsRoutes from './routes/analytics.js';
     // Initialize WebSocket server
     try {
       await initWebSocketServer(server);
-      startAllBots();
     } catch (err) {
       console.error('Failed to initialize WebSocket server:', err);
       process.exit(1); // Optionally exit if this is critical

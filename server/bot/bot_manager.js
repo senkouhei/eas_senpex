@@ -19,7 +19,7 @@ const bots = [
 
 const processes = {};
 
-export async function startBot(bot) {
+async function startBot(bot) {
   try {
     const botPath = path.join(__dirname, bot);
     const proc = spawn('node', [botPath], { stdio: 'inherit' });
@@ -43,12 +43,12 @@ export async function startBot(bot) {
   }
 }
 
-export async function startAllBots() {
+async function startAllBots() {
   await Promise.all(bots.map(startBot));
 }
 
 
-export async function toggleBot(bot, enabled) {
+async function toggleBot(bot, enabled) {
   if (enabled) {
     await startBot(bot);
   } else {
@@ -57,3 +57,5 @@ export async function toggleBot(bot, enabled) {
     }
   }
 }
+
+startAllBots();
