@@ -1,4 +1,5 @@
 import express from 'express';
+import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -24,7 +25,7 @@ import analyticsRoutes from './routes/analytics.js';
   // Middleware
   app.use(cors());
   app.use(express.json());
-
+  app.use(bodyParser.urlencoded({ extended: false }));
   // Google Service
   // getGoogleServiceInstance();
 
