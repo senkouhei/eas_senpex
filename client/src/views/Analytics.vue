@@ -12,14 +12,18 @@
       <h2 class="text-lg font-semibold mb-2">Number of SMS Sent Throughout Specific Timeframe</h2>
       <div v-if="loadingSmsSent" class="text-gray-500">Loading...</div>
       <div v-else>
-        <Bar v-if="smsSentData.length"
-          :data="smsSentChartData"
-          :options="barOptions"
-          :plugins="[ChartDataLabels, BarHoverHighlight]"
-          :width="Math.max(smsSentData.length * 50, 400)"
-          :height="100"
-        />
-        <div v-else class="text-gray-500">No data available for selected range.</div>
+        <div class="bar-chart-scroll-wrapper">
+          <div :style="{ minWidth: '400px', width: Math.max(smsSentData.length * 50, 400) + 'px', height: '300px' }">
+            <Bar v-if="smsSentData.length"
+              :data="smsSentChartData"
+              :options="barOptions"
+              :plugins="[ChartDataLabels, BarHoverHighlight]"
+              :width="Math.max(smsSentData.length * 50, 400)"
+              :height="300"
+            />
+            <div v-else class="text-gray-500">No data available for selected range.</div>
+          </div>
+        </div>
       </div>
     </div>
     <div>
@@ -79,9 +83,15 @@ function updateQuery(params: Record<string, any>) {
   router.replace({ query: { ...route.query, ...params } })
 }
 
+let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
 watch([startDate, endDate], ([newStart, newEnd]) => {
-  updateQuery({ start: newStart, end: newEnd });
-  fetchSmsSent();
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    updateQuery({ start: newStart, end: newEnd });
+    fetchSmsSent();
+    fetchSmsByState();
+  }, 500);
 });
 
 onMounted(() => {
@@ -93,14 +103,14 @@ onMounted(() => {
   fetchSmsByState();
 });
 
-const smsSentData = ref<{ formatted_date: string, count: number }[]>([])
+const smsSentData = ref<{ sms_date: string, count: number }[]>([])
 const smsByStateData = ref<{ state_display: string, count: number }[]>([])
 const loadingSmsSent = ref(false)
 const loadingSmsByState = ref(false)
 const hoveredBarIndex = ref<number | null>(null)
 
 const smsSentChartData = computed(() => ({
-  labels: smsSentData.value.map(row => row.formatted_date),
+  labels: smsSentData.value.map(row => row.sms_date),
   datasets: [
     {
       label: 'SMS Sent',
@@ -140,7 +150,22 @@ const barOptions = {
     }
   },
   scales: {
-    y: { beginAtZero: true }
+    y: { beginAtZero: true },
+    x: {
+      ticks: {
+        callback: function(this: any, value: any): string {
+          const label = this.getLabelForValue(value);
+          const date = new Date(label);
+          if (isNaN(date.getTime())) return label; // fallback if not a date
+          if (date.getDate() === 1) {
+            const month = date.toLocaleString('default', { month: 'short' });
+            return `${month}-${date.getDate()}`;
+          } else {
+            return date.getDate().toString();
+          }
+        }
+      }
+    }
   },
   interaction: {
     mode: 'index' as const,
