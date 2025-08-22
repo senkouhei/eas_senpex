@@ -181,6 +181,9 @@
                   </div>
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Message
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   URL
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -228,6 +231,11 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {{ formatDate(candidator.sms_transfered_datetime) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <button v-if="candidator.sms_text" @click="openMessageModal(candidator)" class="text-blue-600 hover:text-blue-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </button>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <a :href="candidator.url" target="_blank" class="text-blue-600 hover:text-blue-900">
@@ -285,6 +293,63 @@
         <span class="mx-2">Page {{ page }}</span>
         <button @click="onPageChange(page + 1)" :disabled="page * limit >= candidatorsStore.totalCount" class="px-2 py-1 border rounded disabled:opacity-50">Next</button>
         <span class="ml-4 text-sm text-gray-500">Total: {{ candidatorsStore.totalCount }}</span>
+      </div>
+    </div>
+    <div v-if="showMessageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+        <button class="absolute top-6 right-6 text-gray-500 hover:text-gray-700" @click="closeMessageModal">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <h3 class="text-lg font-semibold mb-4">Message History</h3>
+        <div v-if="selectedMessage?.aggregated_messages && Array.isArray(selectedMessage.aggregated_messages)" class="chat-history mb-4">
+          <div class="flex justify-end mb-2">
+            <div class="chat-bubble chat-bubble-right">
+              <span>{{ selectedMessage?.sms_text }}</span>
+              <div class="chat-time text-white">{{ formatDate(selectedMessage?.sms_transfered_datetime) }}</div>
+            </div>
+          </div>
+          <div v-for="(msg, idx) in selectedMessage.aggregated_messages" :key="idx" class="mb-2 flex flex-col gap-1">
+            <div v-if="msg.message">
+              <div class="flex justify-start">
+                <div class="chat-bubble chat-bubble-left">
+                  <span>{{ msg.message }}</span>
+                  <div class="chat-time">{{ formatDate(msg.created_at) }}</div>
+                </div>
+              </div>
+            </div>
+            <div v-if="msg.reply">
+              <div class="flex justify-end">
+                <div class="chat-bubble chat-bubble-right">
+                  <span>{{ msg.reply }}</span>
+                  <div class="chat-time text-white">{{ formatDate(msg.created_at) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-4">
+          <textarea
+            v-model="newSmsText"
+            class="flex-1 border rounded px-2 py-1 resize-none"
+            rows="2"
+            placeholder="Type your message..."
+            :disabled="sendingSms"
+          ></textarea>
+          <button
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+            @click="sendSms"
+            :disabled="sendingSms || !newSmsText.trim()"
+          >
+            <span v-if="!sendingSms">Send</span>
+            <svg v-else class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="text-xs text-gray-500 mt-2">
+          The message which is sent cannot be edited or undone. Please be cautious.
+        </div>
       </div>
     </div>
   </div>
@@ -447,6 +512,45 @@ watch(() => route.query.filter, (filter) => {
   }
 }, { immediate: true })
 
+const showMessageModal = ref(false)
+const selectedMessage = ref<any>(null)
+function openMessageModal(row: any) {
+  selectedMessage.value = row
+  showMessageModal.value = true
+}
+function closeMessageModal() {
+  showMessageModal.value = false
+  selectedMessage.value = null
+}
+
+const newSmsText = ref('')
+const sendingSms = ref(false)
+
+async function sendSms() {
+  if (!selectedMessage.value || !newSmsText.value.trim()) return;
+  sendingSms.value = true;
+  try {
+    // Adjust the API endpoint and payload as needed
+    const { data } = await api.post('/api/sms/send', {
+      phone_number: selectedMessage.value.phone_number,
+      message: newSmsText.value
+    });
+    // On success, push the new message to chat history
+    if (selectedMessage.value.aggregated_messages && Array.isArray(selectedMessage.value.aggregated_messages)) {
+      selectedMessage.value.aggregated_messages.push({
+        message: null,
+        created_at: new Date().toISOString(),
+        reply: newSmsText.value
+      });
+    }
+    newSmsText.value = '';
+  } catch (err) {
+    alert('Failed to send SMS');
+  } finally {
+    sendingSms.value = false;
+  }
+}
+
 onMounted(async () => {
   // await dashboardStore.fetchStats()
   useDashboardWebSocket((msg) => {
@@ -507,5 +611,52 @@ onMounted(async () => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+.chat-history {
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.chat-bubble {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 18px;
+  max-width: 80%;
+  word-break: break-word;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+.chat-bubble-right {
+  background: #3b82f6;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  border-top-right-radius: 18px;
+  border-top-left-radius: 18px;
+  border-bottom-left-radius: 18px;
+  align-self: flex-end;
+}
+.chat-bubble-left {
+  background: #e5e7eb;
+  color: #222;
+  border-bottom-left-radius: 4px;
+  border-top-right-radius: 18px;
+  border-top-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  align-self: flex-start;
+}
+.chat-time {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  text-align: right;
+}
+.text-white {
+  color: #fff;
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

@@ -11,8 +11,8 @@ export async function extractContactInfo(text) {
 - Name
 - Email
 - Phone number
-- City
-- State
+- City (if not found, return null)
+- State (2 letter code, if not found, return null)
 
 Resume text:
 ${text}

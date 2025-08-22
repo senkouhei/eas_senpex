@@ -195,7 +195,7 @@ export async function setCandidatorSMSStatus(gmail_id, transfered, sid, datetime
 export async function getCandidatorsByStatus(status, page, limit, search, sortField, sortOrder, statusFilter, city, state, phone) {
   try {
     // Use coalesce to select name or gmail_name as name
-    let query = supabase.from('candidators_with_name').select('*', { count: 'exact' });
+    let query = supabase.from('candidators_with_messages').select('*', { count: 'exact' });
 
     query.is('is_available', true);
     if (!statusFilter) statusFilter = '';
@@ -289,7 +289,7 @@ export async function getCandidatesPedingSMS() {
       .from('candidators')
       .select('*')
       .or(
-        'and(sms_status.neq.delivered,sms_status.neq.failed,sms_sid.not.is.null),' +
+        'and(sms_status.neq.delivered,sms_status.neq.failed,sms_status.neq.undelivered,sms_sid.not.is.null),' +
         'and(sms_status.is.null,sms_sid.not.is.null)'
       );
     if (error) throw error;

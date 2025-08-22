@@ -13,6 +13,7 @@ interface Candidator {
   contact_extracted: number
   sms_transferred: number
   sms_status: string
+  sms_text: string
   created_at: string
   updated_at: string
   gmail_timestamp: string
