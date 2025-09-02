@@ -4,7 +4,7 @@ services:
     name: api-eas-senpex
     runtime: node
     plan: starter
-    buildCommand: npm install && npm run build
+    buildCommand: npm install
     startCommand: npm run deploy
     envVars:
       - key: NODE_ENV
@@ -28,6 +28,8 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run deploy
     envVars:
+      - key: NODE_ENV
+        value: development
       - key: VITE_WS_URL
         value: wss://api-eas-senpex.onrender.com/ws
       - key: VITE_BACKEND_API_URL

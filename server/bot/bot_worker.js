@@ -1,11 +1,12 @@
 import { Worker } from 'bullmq';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const connection = { host: '127.0.0.1', port: 6379 };
+const connection = { url: process.env.REDIS_URL };
 
 const botWorker = new Worker(
   'botQueue',

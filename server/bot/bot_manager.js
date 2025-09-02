@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getSetting } from '../database/settings.js';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,7 @@ const bots = [
 ];
 
 // BullMQ connection (default localhost Redis)
-const connection = { host: '127.0.0.1', port: 6379 };
+const connection = { url: process.env.REDIS_URL };
 const botQueue = new Queue('botQueue', { connection });
 
 async function scheduleBotJobs() {
