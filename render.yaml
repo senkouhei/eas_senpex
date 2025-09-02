@@ -2,8 +2,8 @@ services:
   # (Optional) Web service for your main app
   - type: web
     name: api-eas-senpex
-    env: node
-    plan: Starter
+    runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run deploy
     envVars:
@@ -22,8 +22,8 @@ services:
 
   - type: web
     name: eas-senpex
-    env: static
-    plan: Starter
+    runtime: static
+    plan: free
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
@@ -37,7 +37,7 @@ services:
   # Background worker for bot_manager
   - type: worker
     name: eas-bot-manager
-    env: node
+    runtime: node
     plan: free
     buildCommand: npm install
     startCommand: node server/bot/bot_manager.js
@@ -63,7 +63,7 @@ services:
   # Background worker for bot_worker
   - type: worker
     name: eas-bot-worker
-    env: node
+    runtime: node
     plan: free
     buildCommand: npm install
     startCommand: node server/bot/bot_worker.js
