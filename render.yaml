@@ -28,8 +28,6 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run deploy
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: VITE_WS_URL
         value: wss://api-eas-senpex.onrender.com/ws
       - key: VITE_BACKEND_API_URL
