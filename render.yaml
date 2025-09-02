@@ -3,7 +3,7 @@ services:
   - type: web
     name: api-eas-senpex
     env: node
-    plan: standard
+    plan: Starter
     buildCommand: npm install && npm run build
     startCommand: npm run deploy
     envVars:
@@ -23,7 +23,7 @@ services:
   - type: web
     name: eas-senpex
     env: static
-    plan: standard
+    plan: Starter
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
