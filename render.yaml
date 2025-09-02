@@ -1,0 +1,90 @@
+services:
+  # (Optional) Web service for your main app
+  - type: web
+    name: api-eas-senpex
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_WS_URL
+        value: wss://api-eas-senpex.onrender.com/ws
+      - key: VITE_BACKEND_API_URL
+        value: https://api-eas-senpex.onrender.com
+      - key: SUPABASE_URL
+        value: https://ohelqmhkdxnsdrvuvcqm.supabase.co
+      - key: SUPABASE_SERVICE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oZWxxbWhrZHhuc2RydnV2Y3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyODc5NDYsImV4cCI6MjA2OTg2Mzk0Nn0.3tJIpLRoKGrla9tmyKZuZr7RREjHCa_DuA82PqCM3Io
+
+      # Add any other environment variables your app needs
+
+  - type: static
+    name: eas-senpex
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_WS_URL
+        value: wss://api-eas-senpex.onrender.com/ws
+      - key: VITE_BACKEND_API_URL
+        value: https://api-eas-senpex.onrender.com
+
+  # Background worker for bot_manager
+  - type: worker
+    name: eas-bot-manager
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/bot/bot_manager.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: eas-redis
+          property: connectionString
+      - key: VITE_WS_URL
+        value: wss://api-eas-senpex.onrender.com/ws
+      - key: VITE_BACKEND_API_URL
+        value: https://api-eas-senpex.onrender.com
+      - key: SUPABASE_URL
+        value: https://ohelqmhkdxnsdrvuvcqm.supabase.co
+      - key: SUPABASE_SERVICE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oZWxxbWhrZHhuc2RydnV2Y3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyODc5NDYsImV4cCI6MjA2OTg2Mzk0Nn0.3tJIpLRoKGrla9tmyKZuZr7RREjHCa_DuA82PqCM3Io
+
+      # Add any other environment variables your bots need
+
+  # Background worker for bot_worker
+  - type: worker
+    name: eas-bot-worker
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/bot/bot_worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: eas-redis
+          property: connectionString
+      - key: VITE_WS_URL
+        value: wss://api-eas-senpex.onrender.com/ws
+      - key: VITE_BACKEND_API_URL
+        value: https://api-eas-senpex.onrender.com
+      - key: SUPABASE_URL
+        value: https://ohelqmhkdxnsdrvuvcqm.supabase.co
+      - key: SUPABASE_SERVICE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oZWxxbWhrZHhuc2RydnV2Y3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyODc5NDYsImV4cCI6MjA2OTg2Mzk0Nn0.3tJIpLRoKGrla9tmyKZuZr7RREjHCa_DuA82PqCM3Io
+
+      # Add any other environment variables your bots need
+
+  # Redis instance for BullMQ
+  - type: redis
+    name: eas-redis
+    plan: free

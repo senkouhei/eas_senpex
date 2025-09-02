@@ -12,103 +12,81 @@ import { formatPhoneNumber } from '../utils/phone.js';
 import { logEvent } from '../utils/log.js';
 import { updateCandidatorSMSStatus, updateCandidatorSMSStatusBySid, getCandidatesPedingSMS } from '../database/candidators.js';
 import axios from 'axios';
+import { fileURLToPath } from 'url';
 
-if (await getSetting('twilio_sms_bot.js') === 'ON') {
-  await logEvent('twilio_sms_bot.js', 'INFO', 'Started twilio_sms_bot.js');
-
-  let ws = null;
-  function connectWebSocket() {
-    ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
-    ws.on('open', () => {
-      broadcast({ bot: 'twilio_sms_bot.js', running: true });
-    });
-    ws.on('close', () => {
-      broadcast({ bot: 'twilio_sms_bot.js', running: false });
-      setTimeout(connectWebSocket, 1000);
-    });
-  }
-  connectWebSocket();
-
-  function broadcast(data) {
-    if (!ws || !ws.readyState === WebSocket.OPEN) return;
-    const msg = JSON.stringify(data);
-    ws.send(msg);
-  }
-
-  async function fetchAllMessages(pageSize = 20) {
-    let messages = [];
-    let nextPageUrl = null;
-    do {
-      if (!nextPageUrl) {
-        const page = await client.messages.page({
-          from: formatPhoneNumber(fromNumber),
-          pageSize,
-        });
-        nextPageUrl = page.nextPageUrl;
-        messages = messages.concat(page.instances);
-      } else {
-        const response = await axios.get(nextPageUrl, {
-          auth: {
-            username: accountSid,
-            password: authToken
-          }
-        });
-        if (response.data.next_page_uri) {
-          nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
+export async function run() {
+  if (await getSetting('twilio_sms_bot.js') === 'ON') {
+    await logEvent('twilio_sms_bot.js', 'INFO', 'Started twilio_sms_bot.js');
+    let ws = null;
+    function connectWebSocket() {
+      ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
+      ws.on('open', () => {
+        broadcast({ bot: 'twilio_sms_bot.js', running: true });
+      });
+      ws.on('close', () => {
+        broadcast({ bot: 'twilio_sms_bot.js', running: false });
+        setTimeout(connectWebSocket, 1000);
+      });
+    }
+    connectWebSocket();
+    function broadcast(data) {
+      if (!ws || !ws.readyState === WebSocket.OPEN) return;
+      const msg = JSON.stringify(data);
+      ws.send(msg);
+    }
+    async function fetchAllMessages(pageSize = 20) {
+      let messages = [];
+      let nextPageUrl = null;
+      do {
+        if (!nextPageUrl) {
+          const page = await client.messages.page({
+            from: formatPhoneNumber(fromNumber),
+            pageSize,
+          });
+          nextPageUrl = page.nextPageUrl;
+          messages = messages.concat(page.instances);
         } else {
-          nextPageUrl = null;
+          const response = await axios.get(nextPageUrl, {
+            auth: {
+              username: accountSid,
+              password: authToken
+            }
+          });
+          if (response.data.next_page_uri) {
+            nextPageUrl = 'https://api.twilio.com' + response.data.next_page_uri;
+          } else {
+            nextPageUrl = null;
+          }
+          messages = messages.concat(response.data.messages);
         }
-        messages = messages.concat(response.data.messages);
-      }
-    } while (nextPageUrl);
-  
-    return messages;
-  }
-  
-  async function fetchMessage(sid) {
-    const message = await client
-      .messages(sid)
-      .fetch();
-  
-    return message;
-  }
-
-  async function fetchCandidatesStatus() {
-    const candidates = await getCandidatesPedingSMS();
-    for (const c of candidates) {
-      const { sms_sid } = c;
-      try {
-        const data = await fetchMessage(sms_sid);
-        const { status, dateSent, body } = data;
-        console.log(status, dateSent);
-        await updateCandidatorSMSStatusBySid(sms_sid, status, dateSent || new Date().toISOString(), body);         
-      } catch (error) {
-        console.error(error);
+      } while (nextPageUrl);
+      return messages;
+    }
+    async function fetchMessage(sid) {
+      const message = await client
+        .messages(sid)
+        .fetch();
+      return message;
+    }
+    async function fetchCandidatesStatus() {
+      const candidates = await getCandidatesPedingSMS();
+      for (const c of candidates) {
+        const { sms_sid } = c;
+        try {
+          const data = await fetchMessage(sms_sid);
+          const { status, dateSent, body } = data;
+          console.log(status, dateSent);
+          await updateCandidatorSMSStatusBySid(sms_sid, status, dateSent || new Date().toISOString(), body);         
+        } catch (error) {
+          console.error(error);
+        }
       }
     }
-  }
-
-  async function run() {
-    // const messages = await fetchAllMessages(1000);
-    // for (const m of messages) {
-    //   const { sid, status, to, dateSent, body } = m;
-    //   let error = null;
-    //   do {
-    //     try {
-    //       await updateCandidatorSMSStatus({ phone_number: to, sid, datetime: dateSent || new Date().toISOString(), status, body });          
-    //     } catch (err) {
-    //       console.error(err);
-    //       error = err;
-    //       await new Promise(resolve => setTimeout(resolve, 3000));
-    //     }
-    //   } while (error);
-    // }
     try {
       await fetchCandidatesStatus();
     } catch (err) {
       await logEvent('twilio_sms_bot.js', 'ERROR', err.message || err);
     }
-
     try {
       let count = 0;
       const candidators = await getCandidatorsToNotify() || [];
@@ -132,13 +110,10 @@ if (await getSetting('twilio_sms_bot.js') === 'ON') {
     } catch (err) {
       await logEvent('twilio_sms_bot.js', 'ERROR', err.message || err);
     }
-  }
-
-  run().then(async () => {
     await logEvent('twilio_sms_bot.js', 'INFO', 'Finished twilio_sms_bot.js');
-    process.exit(0);
-  }).catch(err => {
-    logEvent('twilio_sms_bot.js', 'ERROR', err.message || err).catch(console.error);
-    process.exit(1);
-  });
+  }
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(`file://${process.argv[1]}`)) {
+  run();
 }

@@ -7,56 +7,50 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import { URL } from 'url';
 import { getSetting } from '../database/settings.js';
+import { fileURLToPath } from 'url';
 // import puppeteer from 'puppeteer';
 
-if (await getSetting('resume_download_link_bot.js') === 'ON') {
-
-  await logEvent('resume_download_link_bot.js', 'INFO', 'Started resume_download_link_bot.js');
-  let ws = null;
-  function connectWebSocket() {
-    ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
-    ws.on('open', () => {
-      broadcast({ bot: 'resume_download_link_bot.js', running: true });
-    });
-    ws.on('close', () => {
-      broadcast({ bot: 'resume_download_link_bot.js', running: false });
-      setTimeout(connectWebSocket, 1000);
-    });
-  }
-  connectWebSocket();
-
-  function broadcast(data) {
-    if (!ws || !ws.readyState === WebSocket.OPEN) return;
-    const msg = JSON.stringify(data);
-    ws.send(msg);
-  }
-
-
-  async function getResumeDownloadLink(url) {
-    const apiKey = await getSetting('SCRAPERAPI_KEY');
-    const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
-    // Get the sa-final-url header
-    const finalUrl = response.headers.get('sa-final-url');
-    if (finalUrl) {
-      try {
-        const parsed = new URL(finalUrl);
-        const id = parsed.searchParams.get('id');
-        return id ? `https://employers.indeed.com/api/catws/public/resume/download?id=${encodeURIComponent(id)}&publicResumeTk=undefined` : null
-      } catch (e) {
-        console.error('Failed to parse sa-final-url:', e);
-        return null;
-      }
+export async function run() {
+  if (await getSetting('resume_download_link_bot.js') === 'ON') {
+    await logEvent('resume_download_link_bot.js', 'INFO', 'Started resume_download_link_bot.js');
+    let ws = null;
+    function connectWebSocket() {
+      ws = new WebSocket(process.env.VITE_WS_URL || 'ws://localhost:5000/ws');
+      ws.on('open', () => {
+        broadcast({ bot: 'resume_download_link_bot.js', running: true });
+      });
+      ws.on('close', () => {
+        broadcast({ bot: 'resume_download_link_bot.js', running: false });
+        setTimeout(connectWebSocket, 1000);
+      });
     }
-    // fallback: parse HTML if needed
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    const href = $('a[data-testid="header-download-resume-button"]').attr('href');
-    return href || null;
-  }
-
-  async function run() {
-    let count = 0;
+    connectWebSocket();
+    function broadcast(data) {
+      if (!ws || !ws.readyState === WebSocket.OPEN) return;
+      const msg = JSON.stringify(data);
+      ws.send(msg);
+    }
+    async function getResumeDownloadLink(url) {
+      const apiKey = await getSetting('SCRAPERAPI_KEY');
+      const response = await fetch(`https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render=true`);
+      const finalUrl = response.headers.get('sa-final-url');
+      if (finalUrl) {
+        try {
+          const parsed = new URL(finalUrl);
+          const id = parsed.searchParams.get('id');
+          return id ? `https://employers.indeed.com/api/catws/public/resume/download?id=${encodeURIComponent(id)}&publicResumeTk=undefined` : null
+        } catch (e) {
+          console.error('Failed to parse sa-final-url:', e);
+          return null;
+        }
+      }
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      const href = $('a[data-testid="header-download-resume-button"]').attr('href');
+      return href || null;
+    }
     try {
+      let count = 0;
       const candidators = await getCandidatorsWithoutUrl() || [];
       for (const candidator of candidators) {
         try {
@@ -80,14 +74,10 @@ if (await getSetting('resume_download_link_bot.js') === 'ON') {
     } catch (err) {
       await logEvent('resume_download_link_bot.js', 'ERROR', err.message || err);
     }
-  }
-
-  run().then(async () => {
     await logEvent('resume_download_link_bot.js', 'INFO', 'Finished resume_download_link_bot.js');
-    process.exit(0);
-  }).catch(err => {
-    logEvent('resume_download_link_bot.js', 'ERROR', err.message || err).catch(console.error);
-    process.exit(1);
-  });
+  }
+}
 
+if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(`file://${process.argv[1]}`)) {
+  run();
 }

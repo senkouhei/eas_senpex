@@ -14,12 +14,14 @@
     "install-server": "npm install",
     "postinstall": "npm run install-client",
     "render": "npm run build && npm run deploy",
-    "start-bots": "node server/bot/bot_manager.js"
+    "start-bots": "node server/bot/bot_manager.js",
+    "start-bot-workers": "node server/bot/bot_worker.js"
   },
   "dependencies": {
     "@hyzyla/pdfium": "^2.1.9",
     "@supabase/supabase-js": "^2.53.0",
     "axios": "^1.11.0",
+    "bullmq": "^5.58.4",
     "chartjs-plugin-datalabels": "^2.2.0",
     "cheerio": "^1.1.2",
     "chromium": "^3.0.3",
