@@ -90,3 +90,5 @@ services:
   - type: redis
     name: eas-redis
     plan: free
+    ipAllowList:
+      - source: internal
