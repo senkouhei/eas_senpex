@@ -91,4 +91,4 @@ services:
     name: eas-redis
     plan: free
     ipAllowList:
-      - source: internal
+      - source: 0.0.0.0/0
