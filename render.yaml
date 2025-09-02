@@ -20,8 +20,10 @@ services:
 
       # Add any other environment variables your app needs
 
-  - type: static
+  - type: web
     name: eas-senpex
+    env: static
+    plan: free
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
