@@ -22,8 +22,7 @@ services:
 
   - type: web
     name: eas-senpex
-    runtime: node
-    plan: starter
+    runtime: static
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
