@@ -23,9 +23,10 @@ services:
   - type: web
     name: eas-senpex
     runtime: node
-    plan: free
-    buildCommand: npm run install-client
-    startCommand: npm run render
+    plan: starter
+    rootDir: client
+    buildCommand: npm install && npm run build
+    startCommand: npm run deploy
     envVars:
       - key: NODE_ENV
         value: production
